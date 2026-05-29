@@ -64,6 +64,12 @@ function makePdf(data, sourceText) {
     const stream = fs.createWriteStream(pdfPath);
     doc.pipe(stream);
 
+    const urduFontPath = path.join(__dirname, "fonts", "JameelNooriNastaleeq.ttf");
+
+    if (fs.existsSync(urduFontPath)) {
+      doc.registerFont("UrduFont", urduFontPath);
+    }
+
     const lines = splitText(sourceText);
 
     const pageW = 595.28;
@@ -72,13 +78,26 @@ function makePdf(data, sourceText) {
     const right = 560;
     const width = right - left;
 
-    function lineText(i) {
+    function cleanLine(i) {
       return getLine(lines, i).replace(/\s+/g, " ").trim();
+    }
+
+    function useEnglishFont(size = 11.5, bold = false) {
+      doc.font(bold ? "Times-Bold" : "Times-Roman").fontSize(size);
+    }
+
+    function useUrduFont(size = 13) {
+      if (fs.existsSync(urduFontPath)) {
+        doc.font("UrduFont").fontSize(size);
+      } else {
+        doc.font("Times-Roman").fontSize(size);
+      }
     }
 
     function addBorder() {
       doc.lineWidth(1);
       doc.rect(25, 25, pageW - 50, pageH - 50).stroke();
+      doc.rect(31, 31, pageW - 62, pageH - 62).stroke();
     }
 
     function checkPage(h = 80) {
@@ -91,8 +110,13 @@ function makePdf(data, sourceText) {
 
     function cell(x, y, w, h, text, opt = {}) {
       doc.rect(x, y, w, h).stroke();
-      const font = opt.bold ? "Times-Bold" : "Times-Roman";
-      doc.font(font).fontSize(opt.size || 10.5);
+
+      if (opt.urdu) {
+        useUrduFont(opt.size || 13);
+      } else {
+        useEnglishFont(opt.size || 11.5, opt.bold || false);
+      }
+
       doc.text(text || "", x + 5, y + 6, {
         width: w - 10,
         height: h - 10,
@@ -100,39 +124,37 @@ function makePdf(data, sourceText) {
       });
     }
 
-    function sectionBar(y, leftTitle, marks, rightTitle) {
-      doc.lineWidth(1);
-      cell(left, y, 70, 26, leftTitle, { bold: true, size: 11.5, align: "center" });
-      cell(left + 70, y, 260, 26, "Write / Tick the correct answer", { bold: true, size: 11.5 });
-      cell(left + 330, y, 80, 26, marks, { bold: true, size: 11.5, align: "center" });
-      cell(left + 410, y, 115, 26, rightTitle, { bold: true, size: 11.5, align: "right" });
-      doc.y = y + 32;
+    function sectionBar(y, qNo, engTitle, marks, urduTitle) {
+      cell(left, y, 55, 26, qNo, { bold: true, size: 12, align: "center" });
+      cell(left + 55, y, 245, 26, engTitle, { bold: true, size: 12 });
+      cell(left + 300, y, 80, 26, marks, { bold: true, size: 12, align: "center" });
+      cell(left + 380, y, 145, 26, urduTitle, { urdu: true, size: 13, align: "right" });
+      doc.y = y + 30;
     }
 
     addBorder();
 
-    doc.font("Times-Bold").fontSize(25).text(
-      (data.academyName || "SCHOOL / ACADEMY NAME").toUpperCase(),
-      left,
-      42,
-      { width, align: "center" }
-    );
+    useEnglishFont(24, true);
+    doc.text((data.academyName || "SCHOOL / ACADEMY NAME").toUpperCase(), left, 42, {
+      width,
+      align: "center"
+    });
 
-    doc.font("Times-Roman").fontSize(11).text(
-      data.address || "Exam Paper Generator",
-      left,
-      72,
-      { width, align: "center" }
-    );
+    useEnglishFont(11);
+    doc.text("Exam Paper", left, 70, {
+      width,
+      align: "center"
+    });
 
     const hy = 95;
+
     cell(left, hy, 130, 32, "Test # " + (data.testType || ""), { bold: true, size: 11.5 });
     cell(left + 130, hy, 180, 32, data.subjectName || "Subject", { bold: true, size: 12.5, align: "center" });
     cell(left + 310, hy, 215, 32, "Chapter / Syllabus: " + (data.syllabus || ""), { bold: true, size: 11.5 });
 
-    cell(left, hy + 32, 130, 28, "Time: ________", { size: 11 });
+    cell(left, hy + 32, 130, 28, "Time: ________", { size: 11.5 });
     cell(left + 130, hy + 32, 180, 28, "Class: " + (data.className || ""), { bold: true, size: 11.5, align: "center" });
-    cell(left + 310, hy + 32, 215, 28, "Date: ______ / ______ / ______", { size: 11 });
+    cell(left + 310, hy + 32, 215, 28, "Date: ______ / ______ / ______", { size: 11.5 });
 
     cell(left, hy + 60, 275, 28, "Student Name", { bold: true, size: 11.5 });
     cell(left + 275, hy + 60, 125, 28, "Roll No", { bold: true, size: 11.5, align: "center" });
@@ -144,65 +166,52 @@ function makePdf(data, sourceText) {
     const blanks = count(data.blanks);
     const ticks = count(data.ticks);
 
-    let y = hy + 98;
+    let y = hy + 100;
 
     if (mcqs > 0) {
-      doc.font("Times-Bold").fontSize(11.5).text(
-        "Four possible answers A, B, C and D are given. Tick the correct option.",
-        left,
-        y,
-        { width }
-      );
+      useEnglishFont(11.5, true);
+      doc.text("Four possible answers A, B, C and D are given. Tick the correct option.", left, y, { width });
+      y += 24;
 
-      y += 28;
-
-      sectionBar(y, "Q.1", `1 x ${mcqs} = ${mcqs}`, "درست جواب پر نشان لگائیں");
+      sectionBar(y, "Q.1", "Choose the correct answer", `1 x ${mcqs} = ${mcqs}`, "درست جواب منتخب کریں");
       y = doc.y;
 
       const rowH = 48;
+      const optH = 20;
+
       for (let i = 0; i < mcqs; i++) {
-        checkPage(rowH + 10);
+        checkPage(rowH + optH + 10);
         y = doc.y;
 
-        const q = lineText(i);
-        const a = lineText(i + 1).slice(0, 22);
-        const b = lineText(i + 2).slice(0, 22);
-        const c = lineText(i + 3).slice(0, 22);
-        const d = lineText(i + 4).slice(0, 22);
+        const q = cleanLine(i);
+        const a = cleanLine(i + 1).slice(0, 22);
+        const b = cleanLine(i + 2).slice(0, 22);
+        const c = cleanLine(i + 3).slice(0, 22);
+        const d = cleanLine(i + 4).slice(0, 22);
 
-        cell(left, y, 25, rowH, `${i + 1})`, { bold: true, align: "center", size: 10.5 });
+        cell(left, y, 25, rowH, `${i + 1})`, { bold: true, align: "center", size: 11 });
         cell(left + 25, y, 255, rowH, q + "?", { size: 11.5 });
-if (fs.existsSync(jameelFont)) {
-  doc.font("Jameel");
-} else {
-  doc.font("Times-Roman");
-}
 
-doc.rect(left + 280, y, 220, rowH).stroke();
+        cell(left + 280, y, 220, rowH, q + "؟", {
+          urdu: true,
+          size: 13,
+          align: "right"
+        });
 
-doc.fontSize(13).text(
-  q,
-  left + 285,
-  y + 8,
-  {
-    width: 205,
-    align: "right"
-  }
-);
-
-doc.font("Times-Roman");
-        cell(left + 500, y, 25, rowH, `(${i + 1})`, { bold: true, align: "center", size: 10.5 });
+        cell(left + 500, y, 25, rowH, `(${i + 1})`, { bold: true, align: "center", size: 11 });
 
         y += rowH;
 
-        const optH = 20;
-        cell(left, y, 25, optH, "A", { bold: true, align: "center" });
+        cell(left, y, 25, optH, "A", { bold: true, align: "center", size: 10.5 });
         cell(left + 25, y, 105, optH, a, { align: "center", size: 10.5 });
-        cell(left + 130, y, 25, optH, "B", { bold: true, align: "center" });
+
+        cell(left + 130, y, 25, optH, "B", { bold: true, align: "center", size: 10.5 });
         cell(left + 155, y, 105, optH, b, { align: "center", size: 10.5 });
-        cell(left + 260, y, 25, optH, "C", { bold: true, align: "center" });
+
+        cell(left + 260, y, 25, optH, "C", { bold: true, align: "center", size: 10.5 });
         cell(left + 285, y, 105, optH, c, { align: "center", size: 10.5 });
-        cell(left + 390, y, 25, optH, "D", { bold: true, align: "center" });
+
+        cell(left + 390, y, 25, optH, "D", { bold: true, align: "center", size: 10.5 });
         cell(left + 415, y, 110, optH, d, { align: "center", size: 10.5 });
 
         doc.y = y + optH;
@@ -212,13 +221,15 @@ doc.font("Times-Roman");
     if (blanks > 0) {
       checkPage(50);
       y = doc.y + 10;
-      sectionBar(y, "Q.2", `${blanks} Marks`, "خالی جگہ پر کریں");
+      sectionBar(y, "Q.2", "Fill in the blanks", `${blanks} Marks`, "خالی جگہ پر کریں");
 
       for (let i = 0; i < blanks; i++) {
         checkPage(34);
         y = doc.y;
-        cell(left, y, 35, 30, `${i + 1})`, { bold: true, align: "center" });
-        cell(left + 35, y, 490, 30, lineText(i + 10).slice(0, 80) + " ____________", { size: 11.5 });
+
+        cell(left, y, 35, 30, `${i + 1})`, { bold: true, align: "center", size: 11 });
+        cell(left + 35, y, 490, 30, cleanLine(i + 10).slice(0, 80) + " ____________", { size: 11.5 });
+
         doc.y = y + 30;
       }
     }
@@ -226,14 +237,16 @@ doc.font("Times-Roman");
     if (ticks > 0) {
       checkPage(50);
       y = doc.y + 10;
-      sectionBar(y, "Q.3", `${ticks} Marks`, "درست / غلط");
+      sectionBar(y, "Q.3", "Tick correct statement", `${ticks} Marks`, "درست / غلط");
 
       for (let i = 0; i < ticks; i++) {
         checkPage(34);
         y = doc.y;
-        cell(left, y, 35, 30, `${i + 1})`, { bold: true, align: "center" });
-        cell(left + 35, y, 370, 30, lineText(i + 20) + ".", { size: 11.5 });
+
+        cell(left, y, 35, 30, `${i + 1})`, { bold: true, align: "center", size: 11 });
+        cell(left + 35, y, 370, 30, cleanLine(i + 20) + ".", { size: 11.5 });
         cell(left + 405, y, 120, 30, "True / False", { bold: true, align: "center", size: 11.5 });
+
         doc.y = y + 30;
       }
     }
@@ -241,17 +254,20 @@ doc.font("Times-Roman");
     if (shorts > 0) {
       checkPage(55);
       y = doc.y + 12;
-      sectionBar(y, "Q.4", `2 x ${shorts} = ${shorts * 2}`, "مختصر جوابات لکھیں");
+      sectionBar(y, "Q.4", "Short answer questions", `2 x ${shorts} = ${shorts * 2}`, "مختصر جوابات لکھیں");
 
       for (let i = 0; i < shorts; i++) {
         checkPage(42);
         y = doc.y;
-        cell(left, y, 35, 38, `${romanNo(i + 1)})`, { bold: true, align: "center" });
-        cell(left + 35, y, 250, 38, lineText(i + 30) + "?", { size: 11.5 });
+
+        cell(left, y, 35, 38, `${romanNo(i + 1)})`, { bold: true, align: "center", size: 11 });
+        cell(left + 35, y, 250, 38, cleanLine(i + 30) + "?", { size: 11.5 });
         cell(left + 285, y, 240, 38, "اس سوال کا مختصر جواب لکھیں۔", {
-          size: 11.5,
+          urdu: true,
+          size: 13,
           align: "right"
         });
+
         doc.y = y + 38;
       }
     }
@@ -259,27 +275,28 @@ doc.font("Times-Roman");
     if (longs > 0) {
       checkPage(55);
       y = doc.y + 12;
-      sectionBar(y, "Q.5", `4 x ${longs} = ${longs * 4}`, "تفصیلی جوابات لکھیں");
+      sectionBar(y, "Q.5", "Long answer questions", `4 x ${longs} = ${longs * 4}`, "تفصیلی جوابات لکھیں");
 
       for (let i = 0; i < longs; i++) {
         checkPage(60);
         y = doc.y;
-        cell(left, y, 35, 55, `${String.fromCharCode(97 + i)})`, { bold: true, align: "center" });
-        cell(left + 35, y, 250, 55, "Explain in detail: " + lineText(i + 45) + ".", { size: 11.5 });
+
+        cell(left, y, 35, 55, `${String.fromCharCode(97 + i)})`, { bold: true, align: "center", size: 11 });
+        cell(left + 35, y, 250, 55, "Explain in detail: " + cleanLine(i + 45) + ".", { size: 11.5 });
         cell(left + 285, y, 240, 55, "درج ذیل سوال کا تفصیلی جواب لکھیں۔", {
-          size: 11.5,
+          urdu: true,
+          size: 13,
           align: "right"
         });
+
         doc.y = y + 55;
       }
     }
 
-    doc.moveDown(2);
     checkPage(40);
-    doc.font("Times-Bold").fontSize(14).text("Best of Luck", left, doc.y, {
-      width,
-      align: "center"
-    });
+    doc.moveDown(1);
+    useEnglishFont(14, true);
+    doc.text("Best of Luck", left, doc.y, { width, align: "center" });
 
     doc.end();
 
@@ -287,12 +304,6 @@ doc.font("Times-Roman");
     stream.on("error", reject);
   });
 }
-
-function romanNo(num) {
-  const arr = ["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"];
-  return arr[num - 1] || String(num);
-}
-
 app.get("/", (req, res) => {
   res.send(`<!DOCTYPE html>
 <html lang="en">
