@@ -1,3 +1,13 @@
+require("dotenv").config();
+
+const mongoose = require("mongoose");
+
+mongoose.connect(process.env.MONGO_URI)
+.then(() => console.log("MongoDB Connected"))
+.catch(err => console.log(err));
+
+const express = require("express");
+const app = express();
 const http = require("http");
 
 const html = `<!DOCTYPE html>
