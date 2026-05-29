@@ -33,18 +33,15 @@ padding:0;
 box-sizing:border-box;
 }
 
-html{
-scroll-behavior:smooth;
-}
-
 body{
 font-family:Arial,sans-serif;
-background:#f4faff;
+background:#eef5fb;
 color:#07142f;
 }
 
 a{
 text-decoration:none;
+color:inherit;
 }
 
 .container{
@@ -57,64 +54,88 @@ padding:0 20px;
 header{
 background:#fff;
 border-bottom:1px solid #dbeafe;
-position:sticky;
-top:0;
-z-index:1000;
 }
 
-.topbar{
+.top-header{
+padding:22px 0 10px;
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:18px 0;
 }
 
 .logo{
-font-size:34px;
+font-size:42px;
 font-weight:900;
-color:#07142f;
+letter-spacing:-2px;
 }
 
 .logo span{
 color:#2f7df6;
 }
 
-.nav{
-display:flex;
-gap:20px;
-align-items:center;
+.header-right{
+text-align:right;
+font-size:14px;
+font-weight:700;
+color:#42526b;
+line-height:1.7;
 }
 
-.nav a{
-font-weight:700;
-color:#07142f;
+.navbar{
+margin-bottom:18px;
+border:1px solid #cfe3ff;
+border-radius:14px;
+overflow:hidden;
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:linear-gradient(180deg,#ffffff,#eef6ff);
+box-shadow:0 10px 30px rgba(47,125,246,.08);
+}
+
+.nav-links{
+display:flex;
+flex-wrap:wrap;
+}
+
+.nav-links a{
+padding:15px 22px;
+font-size:15px;
+font-weight:900;
+border-right:1px solid #dbeafe;
+}
+
+.nav-links a:hover{
+background:#eaf3ff;
+color:#2f7df6;
 }
 
 .start-btn{
-padding:14px 24px;
+margin-right:10px;
+padding:14px 28px;
 border-radius:12px;
 background:linear-gradient(135deg,#2f7df6,#22c7b8);
-color:#fff !important;
+color:#fff;
 font-weight:900;
-box-shadow:0 15px 35px rgba(47,125,246,.25);
+box-shadow:0 14px 35px rgba(47,125,246,.25);
 }
 
 .hero{
-padding:100px 20px 70px;
+padding:90px 20px 60px;
 text-align:center;
 background:
 radial-gradient(circle at top left,rgba(47,125,246,.18),transparent 30%),
 radial-gradient(circle at top right,rgba(34,199,184,.18),transparent 30%),
-#fff;
+#f8fcff;
 }
 
 .hero h1{
-font-size:72px;
+font-size:78px;
 line-height:1.05;
-max-width:950px;
+max-width:980px;
 margin:auto;
 font-weight:900;
-letter-spacing:-3px;
+letter-spacing:-4px;
 }
 
 .hero h1 span{
@@ -126,8 +147,8 @@ color:transparent;
 .hero p{
 max-width:760px;
 margin:30px auto;
-font-size:20px;
-line-height:1.8;
+font-size:21px;
+line-height:1.9;
 color:#53657f;
 }
 
@@ -135,14 +156,14 @@ color:#53657f;
 display:flex;
 justify-content:center;
 gap:18px;
+margin-top:35px;
 flex-wrap:wrap;
-margin-top:30px;
 }
 
 .btn{
-padding:16px 30px;
-border-radius:14px;
-font-size:16px;
+padding:18px 34px;
+border-radius:16px;
+font-size:17px;
 font-weight:900;
 border:none;
 cursor:pointer;
@@ -160,18 +181,18 @@ border:1px solid #dbeafe;
 }
 
 .stats{
-padding:20px 20px 80px;
+padding:10px 20px 90px;
 }
 
 .stats-box{
 background:#fff;
-border-radius:30px;
-padding:40px;
+border-radius:32px;
+padding:45px;
 display:grid;
 grid-template-columns:repeat(4,1fr);
 gap:20px;
 border:1px solid #dbeafe;
-box-shadow:0 25px 70px rgba(16,24,40,.08);
+box-shadow:0 20px 60px rgba(16,24,40,.08);
 }
 
 .stat{
@@ -179,13 +200,14 @@ text-align:center;
 }
 
 .stat h2{
-font-size:42px;
-margin-bottom:10px;
+font-size:48px;
+margin-bottom:12px;
 }
 
 .stat p{
 color:#53657f;
 font-weight:700;
+font-size:16px;
 }
 
 .section{
@@ -194,64 +216,66 @@ padding:90px 20px;
 
 .section-title{
 text-align:center;
-margin-bottom:50px;
+margin-bottom:55px;
 }
 
 .section-title h2{
-font-size:50px;
+font-size:52px;
 margin-bottom:18px;
+letter-spacing:-2px;
 }
 
 .section-title p{
 max-width:700px;
 margin:auto;
-color:#53657f;
 font-size:18px;
 line-height:1.8;
+color:#53657f;
 }
 
 .generator-card{
-background:#fff;
-border-radius:30px;
-padding:40px;
-border:1px solid #dbeafe;
-box-shadow:0 25px 70px rgba(16,24,40,.08);
-max-width:900px;
+max-width:950px;
 margin:auto;
+background:#fff;
+border-radius:32px;
+padding:45px;
+border:1px solid #dbeafe;
+box-shadow:0 20px 70px rgba(16,24,40,.08);
 }
 
 .upload-box{
+padding:55px 25px;
+border-radius:28px;
 border:2px dashed #98c2ff;
-padding:50px 20px;
-border-radius:24px;
-text-align:center;
 background:#f8fbff;
+text-align:center;
 }
 
 .upload-box h3{
-font-size:30px;
-margin-bottom:15px;
+font-size:34px;
+margin-bottom:14px;
 }
 
 .upload-box p{
 color:#53657f;
-margin-bottom:20px;
+margin-bottom:25px;
+font-size:16px;
 }
 
 .upload-box input{
-padding:15px;
-width:100%;
-max-width:400px;
-border-radius:14px;
+padding:16px;
+border-radius:16px;
 border:1px solid #dbeafe;
 background:#fff;
+width:100%;
+max-width:420px;
 }
 
 .form-grid{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:20px;
-margin-top:25px;
+gap:22px;
+margin-top:28px;
 }
 
 .field label{
@@ -263,118 +287,118 @@ font-weight:900;
 .field input,
 .field select{
 width:100%;
-padding:15px;
-border-radius:14px;
+padding:16px;
+border-radius:16px;
 border:1px solid #dbeafe;
 font-size:15px;
 }
 
 .submit-btn{
 width:100%;
-margin-top:25px;
+margin-top:26px;
 padding:18px;
 border:none;
-border-radius:16px;
+border-radius:18px;
 font-size:18px;
 font-weight:900;
 background:linear-gradient(135deg,#2f7df6,#22c7b8);
 color:#fff;
-cursor:pointer;
 box-shadow:0 18px 40px rgba(47,125,246,.25);
+cursor:pointer;
 }
 
 .features-grid{
 display:grid;
 grid-template-columns:repeat(3,1fr);
-gap:25px;
+gap:26px;
 }
 
 .feature-card{
 background:#fff;
 border-radius:28px;
-padding:30px;
+padding:34px;
 border:1px solid #dbeafe;
-box-shadow:0 20px 55px rgba(16,24,40,.06);
+box-shadow:0 18px 50px rgba(16,24,40,.06);
 }
 
 .icon{
-width:60px;
-height:60px;
+width:64px;
+height:64px;
 border-radius:18px;
 background:linear-gradient(135deg,#eaf3ff,#defbf7);
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:26px;
+font-size:28px;
 font-weight:900;
 color:#2f7df6;
 margin-bottom:20px;
 }
 
 .feature-card h3{
-font-size:24px;
+font-size:25px;
 margin-bottom:12px;
 }
 
 .feature-card p{
-color:#53657f;
 line-height:1.8;
+color:#53657f;
 }
 
 .pricing-grid{
 display:grid;
 grid-template-columns:repeat(3,1fr);
-gap:25px;
+gap:26px;
 }
 
 .price-card{
 background:#fff;
 border-radius:30px;
-padding:35px;
+padding:38px;
 border:1px solid #dbeafe;
-box-shadow:0 20px 60px rgba(16,24,40,.07);
+box-shadow:0 18px 60px rgba(16,24,40,.06);
 text-align:center;
 }
 
 .price-card h3{
 font-size:28px;
-margin-bottom:20px;
+margin-bottom:18px;
 }
 
 .price{
-font-size:55px;
+font-size:58px;
 font-weight:900;
-margin-bottom:10px;
+margin-bottom:12px;
 }
 
 .price-card p{
-color:#53657f;
 margin-bottom:10px;
 font-weight:700;
+color:#53657f;
 }
 
 .faq{
-max-width:900px;
+max-width:920px;
 margin:auto;
 }
 
 .faq-item{
 background:#fff;
-border-radius:18px;
-padding:24px;
+padding:26px;
+border-radius:20px;
 margin-bottom:18px;
 border:1px solid #dbeafe;
 box-shadow:0 15px 40px rgba(16,24,40,.05);
 }
 
 .faq-item h4{
-font-size:20px;
+font-size:21px;
 margin-bottom:10px;
 }
 
 .faq-item p{
-color:#53657f;
 line-height:1.8;
+color:#53657f;
 }
 
 footer{
@@ -386,11 +410,11 @@ border-top:1px solid #dbeafe;
 .footer-grid{
 display:grid;
 grid-template-columns:2fr 1fr 1fr 1fr;
-gap:30px;
+gap:35px;
 }
 
 .footer-grid h3{
-margin-bottom:20px;
+margin-bottom:18px;
 }
 
 .footer-grid p{
@@ -399,9 +423,9 @@ color:#53657f;
 }
 
 .copy{
-margin-top:50px;
+margin-top:55px;
+padding:18px;
 background:#0d86ad;
-padding:16px;
 text-align:center;
 color:#fff;
 font-size:14px;
@@ -411,12 +435,12 @@ font-size:14px;
 position:fixed;
 right:20px;
 bottom:20px;
-padding:16px 22px;
+padding:18px 24px;
 background:#22c55e;
 color:#fff;
 border-radius:50px;
 font-weight:900;
-box-shadow:0 15px 40px rgba(34,197,94,.30);
+box-shadow:0 18px 40px rgba(34,197,94,.30);
 }
 
 @media(max-width:900px){
@@ -429,12 +453,12 @@ grid-template-columns:1fr 1fr;
 }
 
 .hero h1{
-font-size:52px;
+font-size:56px;
 }
 
 }
 
-@media(max-width:600px){
+@media(max-width:650px){
 
 .stats-box,
 .features-grid,
@@ -452,6 +476,19 @@ font-size:42px;
 font-size:36px;
 }
 
+.navbar{
+flex-direction:column;
+}
+
+.nav-links{
+width:100%;
+justify-content:center;
+}
+
+.start-btn{
+margin:15px;
+}
+
 }
 
 </style>
@@ -461,19 +498,35 @@ font-size:36px;
 
 <header>
 
-<div class="container topbar">
+<div class="container">
+
+<div class="top-header">
 
 <div class="logo">
 Paper<span>Genius</span>
 </div>
 
-<div class="nav">
+<div class="header-right">
+AI Exam Paper Generator<br>
+WhatsApp Support: 0300-000000
+</div>
+
+</div>
+
+<div class="navbar">
+
+<div class="nav-links">
 <a href="#">Home</a>
-<a href="#generator">Generator</a>
+<a href="#generator">Paper Generator</a>
 <a href="#features">Features</a>
 <a href="#pricing">Pricing</a>
 <a href="#faq">FAQ</a>
-<a class="start-btn" href="#generator">Start Now</a>
+</div>
+
+<a class="start-btn" href="#generator">
+Get Started
+</a>
+
 </div>
 
 </div>
@@ -493,13 +546,19 @@ Upload your original JPG, PNG, PDF or DOCX file and generate premium exam papers
 </p>
 
 <div class="hero-btns">
+
 <a href="#generator">
-<button class="btn btn-main">Get Started</button>
+<button class="btn btn-main">
+Get Started
+</button>
 </a>
 
 <a href="#pricing">
-<button class="btn btn-light">View Pricing</button>
+<button class="btn btn-light">
+View Pricing
+</button>
 </a>
+
 </div>
 
 </div>
@@ -544,9 +603,11 @@ Upload your original JPG, PNG, PDF or DOCX file and generate premium exam papers
 
 <div class="section-title">
 <h2>Generate Paper From Original File</h2>
+
 <p>
-Upload original study material and PaperGenius will process it automatically.
+Upload original study material and generate paper automatically.
 </p>
+
 </div>
 
 <div class="generator-card">
@@ -568,6 +629,7 @@ Supported: JPG, PNG, PDF, DOCX
 <div class="form-grid">
 
 <div class="field">
+
 <label>Paper Type</label>
 
 <select name="paperType">
@@ -576,11 +638,15 @@ Supported: JPG, PNG, PDF, DOCX
 <option>Short Questions</option>
 <option>Long Questions</option>
 </select>
+
 </div>
 
 <div class="field">
+
 <label>Total Marks</label>
-<input type="number" name="marks" placeholder="Enter total marks">
+
+<input type="number" placeholder="Enter total marks">
+
 </div>
 
 </div>
@@ -602,10 +668,13 @@ Generate Paper
 <div class="container">
 
 <div class="section-title">
+
 <h2>Premium Features</h2>
+
 <p>
 Everything you need to generate professional exam papers.
 </p>
+
 </div>
 
 <div class="features-grid">
@@ -625,7 +694,7 @@ Everything you need to generate professional exam papers.
 <div class="feature-card">
 <div class="icon">✓</div>
 <h3>Auto Delete</h3>
-<p>Uploaded files delete automatically after 15 minutes.</p>
+<p>Uploaded files auto delete automatically after 15 minutes.</p>
 </div>
 
 </div>
@@ -639,10 +708,13 @@ Everything you need to generate professional exam papers.
 <div class="container">
 
 <div class="section-title">
+
 <h2>Simple Pricing</h2>
+
 <p>
 Affordable credit plans for teachers and academies.
 </p>
+
 </div>
 
 <div class="pricing-grid">
@@ -696,7 +768,7 @@ Affordable credit plans for teachers and academies.
 
 <div class="faq-item">
 <h4>Will uploaded files stay forever?</h4>
-<p>No. All uploaded files auto delete after 15 minutes.</p>
+<p>No. Uploaded files auto delete after 15 minutes.</p>
 </div>
 
 </div>
@@ -760,12 +832,9 @@ return res.send("No file uploaded");
 
 setTimeout(() => {
 
-try {
-
+try{
 fs.unlinkSync(req.file.path);
-console.log("Uploaded file deleted");
-
-} catch (e) {}
+}catch(e){}
 
 }, 15 * 60 * 1000);
 
@@ -790,7 +859,7 @@ box-sizing:border-box;
 
 body{
 font-family:Arial,sans-serif;
-background:#f4faff;
+background:#eef5fb;
 display:flex;
 align-items:center;
 justify-content:center;
@@ -802,63 +871,62 @@ padding:20px;
 width:100%;
 max-width:650px;
 background:#fff;
-border-radius:28px;
-padding:50px 35px;
+border-radius:30px;
+padding:55px 35px;
 text-align:center;
 border:1px solid #dbeafe;
-box-shadow:0 25px 70px rgba(16,24,40,.10);
+box-shadow:0 20px 70px rgba(16,24,40,.10);
 }
 
 .icon{
-width:100px;
-height:100px;
-margin:auto auto 25px;
+width:110px;
+height:110px;
+margin:auto auto 28px;
 border-radius:50%;
 background:linear-gradient(135deg,#2f7df6,#22c7b8);
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:48px;
-color:#fff;
+font-size:54px;
 font-weight:bold;
-box-shadow:0 18px 40px rgba(47,125,246,.30);
+color:#fff;
+box-shadow:0 18px 45px rgba(47,125,246,.30);
 }
 
 h1{
-font-size:42px;
-margin-bottom:15px;
+font-size:52px;
+margin-bottom:18px;
 color:#07142f;
 }
 
 p{
-font-size:17px;
+font-size:18px;
 line-height:1.8;
+margin-bottom:12px;
 color:#53657f;
-margin-bottom:14px;
 }
 
 .info{
-margin-top:25px;
+margin-top:28px;
 padding:18px;
 border-radius:18px;
 background:#f4faff;
 border:1px solid #dbeafe;
 font-size:15px;
-font-weight:700;
+font-weight:900;
 color:#2f7df6;
 }
 
 .btn{
 display:inline-block;
-margin-top:30px;
-padding:16px 34px;
-border-radius:14px;
+margin-top:32px;
+padding:18px 36px;
+border-radius:16px;
 background:linear-gradient(135deg,#2f7df6,#22c7b8);
 color:#fff;
-font-size:16px;
+font-size:17px;
 font-weight:900;
-text-decoration:none;
-box-shadow:0 16px 35px rgba(47,125,246,.25);
+box-shadow:0 18px 40px rgba(47,125,246,.25);
 }
 
 </style>
@@ -878,15 +946,15 @@ File Uploaded
 </h1>
 
 <p>
-Your file has been uploaded successfully.
+Your file uploaded successfully.
 </p>
 
 <p>
-PaperGenius received your original file.
+Uploaded file will auto delete permanently after 15 minutes.
 </p>
 
 <div class="info">
-Uploaded file will auto delete permanently after 15 minutes.
+PaperGenius received your original file successfully.
 </div>
 
 <a href="/" class="btn">
