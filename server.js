@@ -159,7 +159,7 @@ function makePdf(data, sourceText) {
       sectionBar(y, "Q.1", `1 x ${mcqs} = ${mcqs}`, "درست جواب پر نشان لگائیں");
       y = doc.y;
 
-      const rowH = 58;
+      const rowH = 48;
       for (let i = 0; i < mcqs; i++) {
         checkPage(rowH + 10);
         y = doc.y;
@@ -172,15 +172,30 @@ function makePdf(data, sourceText) {
 
         cell(left, y, 25, rowH, `${i + 1})`, { bold: true, align: "center", size: 10.5 });
         cell(left + 25, y, 255, rowH, q + "?", { size: 11.5 });
-        cell(left + 280, y, 220, rowH, "یہی سوال اردو / عربی میں یہاں آئے گا۔", {
-          size: 11.5,
-          align: "right"
-        });
+if (fs.existsSync(jameelFont)) {
+  doc.font("Jameel");
+} else {
+  doc.font("Times-Roman");
+}
+
+doc.rect(left + 280, y, 220, rowH).stroke();
+
+doc.fontSize(13).text(
+  q,
+  left + 285,
+  y + 8,
+  {
+    width: 205,
+    align: "right"
+  }
+);
+
+doc.font("Times-Roman");
         cell(left + 500, y, 25, rowH, `(${i + 1})`, { bold: true, align: "center", size: 10.5 });
 
         y += rowH;
 
-        const optH = 24;
+        const optH = 20;
         cell(left, y, 25, optH, "A", { bold: true, align: "center" });
         cell(left + 25, y, 105, optH, a, { align: "center", size: 10.5 });
         cell(left + 130, y, 25, optH, "B", { bold: true, align: "center" });
