@@ -4,162 +4,790 @@ const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>PaperGenius - AI Exam Paper Generator</title>
+<title>PaperGenius - AI Paper Generator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
 <style>
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;font-family:Inter,Arial,sans-serif;background:linear-gradient(180deg,#eaf4f5,#f7fbfc);color:#07152f}
-a{text-decoration:none;color:inherit}
-.wrap{max-width:1080px;margin:auto;padding:0 12px}
-.top{padding:18px 0 8px;display:flex;justify-content:space-between;align-items:center}
-.logo{font-size:32px;font-weight:900;color:#079b3f;letter-spacing:-1px}
-.contact{text-align:right;font-size:13px;font-weight:800}
-.login{background:#067bb6;color:white;padding:7px 18px;border-radius:6px;display:inline-block;margin-bottom:6px}
-.menu{background:linear-gradient(#fff,#e5e5e5);border:1px solid #aaa;border-radius:8px;overflow:hidden;display:flex;box-shadow:0 4px 15px #0001}
-.menu a{padding:10px 17px;border-right:1px solid #bbb;font-weight:800;font-size:13px}
-.menu a:first-child{background:#85c900;color:white}
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
 
-.hero{background:white;border-radius:20px;margin-top:14px;padding:55px 25px;text-align:center;box-shadow:0 18px 50px #00000012}
-.hero h1{font-size:58px;line-height:1.05;margin:0;font-weight:900;letter-spacing:-2px}
-.hero span{color:#3478f6}
-.hero p{font-size:19px;color:#53627a;max-width:720px;margin:22px auto}
-.btn{display:inline-block;background:#089b45;color:white;padding:13px 26px;border-radius:10px;font-weight:900;margin:5px;border:none}
-.btn.alt{background:white;color:#07152f;border:1px solid #d7deea}
-.stats{border-top:1px solid #dce4ee;margin-top:45px;padding-top:26px;display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
-.stat b{font-size:29px}.stat p{margin:6px 0;color:#60708a}
+html{
+scroll-behavior:smooth;
+}
 
-.title{text-align:center;margin:52px 0 22px}.title h2{font-size:34px;margin:0;font-weight:900}.title p{color:#60708a;font-size:17px}
-.features{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.feature{background:rgba(255,255,255,.92);border:1px solid #e3ebf3;padding:26px;border-radius:20px;box-shadow:0 12px 30px #0000000c;transition:.25s}
-.feature:hover{transform:translateY(-6px);box-shadow:0 22px 45px #079b3f24}
-.icon{width:50px;height:50px;border-radius:15px;background:#eaf2ff;color:#3478f6;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:16px}
-.feature h3{font-size:21px;margin:0 0 10px}.feature p{color:#5b6b84;line-height:1.65;font-size:15px}
+body{
+font-family:'Inter',sans-serif;
+background:#edf5f6;
+color:#07152f;
+}
 
-.pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
-.price-card{background:white;border-radius:24px;overflow:hidden;text-align:center;box-shadow:0 18px 45px #00000014;border:1px solid #e4ebf3;position:relative;transition:.25s}
-.price-card:hover{transform:translateY(-8px)}
-.art{height:120px;background:linear-gradient(135deg,#0038ff,#10d4ff);display:flex;align-items:center;justify-content:center;color:white;font-size:50px}
-.popular{position:absolute;top:98px;left:50%;transform:translateX(-50%);background:#085cff;color:white;font-size:12px;padding:8px 18px;border-radius:20px;font-weight:900}
-.price-card h3{font-size:25px;margin:28px 0 8px}
-.amount{font-size:45px;font-weight:900;color:#0038ff}
-.price-card p{color:#52627a;font-weight:700}
-.price-card ul{list-style:none;padding:0 36px;text-align:left;line-height:2.15;color:#1b2d48;font-size:15px}
-.price-card li:before{content:"✓";color:#0038ff;font-weight:900;margin-right:10px}
-.outline{display:inline-block;border:2px solid #0038ff;color:#0038ff;padding:12px 28px;border-radius:12px;margin:12px 0 26px;font-weight:900}
+a{
+text-decoration:none;
+color:inherit;
+}
 
-.forms{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch}
-.formbox{background:white;border:1px solid #e4ebf3;padding:26px;border-radius:22px;box-shadow:0 16px 40px #00000010;min-height:315px;display:flex;flex-direction:column;transition:.25s}
-.formbox:hover{transform:translateY(-5px);box-shadow:0 24px 50px #079b3f20}
-.formbox h3{font-size:22px;margin:0 0 18px}
-.formbox input{width:100%;padding:14px 15px;border:1px solid #d7deea;border-radius:12px;margin:8px 0;font-family:Inter;font-size:14px}
-.formbox button{margin-top:auto;width:100%;padding:14px;background:linear-gradient(135deg,#079b3f,#05b85a);color:white;border:0;border-radius:12px;font-weight:900;font-size:15px}
+.container{
+max-width:1100px;
+margin:auto;
+padding:0 14px;
+}
 
-.about{background:white;border-radius:24px;padding:38px;box-shadow:0 18px 45px #00000010;line-height:1.85;color:#51627a;font-size:16px;border:1px solid #e4ebf3}
-.about h2{margin-top:0;color:#07152f;font-size:32px}
-.about-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:25px;align-items:center}
-.about-badge{background:linear-gradient(135deg,#0038ff,#10d4ff);color:white;border-radius:22px;padding:30px;text-align:center}
-.about-badge b{font-size:38px;display:block}
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:18px 0 8px;
+}
 
-.faq{max-width:920px;margin:0 auto 45px}
-.faq details{background:white;margin:14px 0;border-radius:16px;padding:20px 24px;box-shadow:0 12px 30px #0000000d;border:1px solid #e5ecf4}
-.faq summary{cursor:pointer;font-size:17px;font-weight:900;list-style:none}
-.faq summary:before{content:"+";background:#eaf2ff;color:#085cff;border-radius:50%;width:25px;height:25px;display:inline-flex;align-items:center;justify-content:center;margin-right:10px}
-.faq details[open] summary:before{content:"−"}
-.faq p{color:#5b6b84;line-height:1.7;margin-left:36px}
+.logo{
+font-size:34px;
+font-weight:900;
+color:#079b3f;
+letter-spacing:-1px;
+}
 
-.footer{margin-top:40px}
-.footer-menu{background:linear-gradient(#fff,#ddd);border-top:1px solid #bbb;border-bottom:1px solid #bbb;text-align:center;padding:12px}
-.footer-menu a{margin:0 12px;font-size:13px;font-weight:800}
-.footer-bottom{background:#087da0;color:white;text-align:center;padding:18px;font-size:13px}
-.whatsapp{position:fixed;right:24px;bottom:24px;background:#25d366;color:white;width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:31px;box-shadow:0 12px 35px #25d36680;z-index:99}
+.contact{
+text-align:right;
+font-size:13px;
+font-weight:800;
+}
 
-@media(max-width:900px){.features,.pricing,.stats,.forms,.about-grid{grid-template-columns:1fr 1fr}.hero h1{font-size:42px}.menu{overflow-x:auto}.menu a{white-space:nowrap}}
-@media(max-width:620px){.top{display:block;text-align:center}.contact{text-align:center;margin-top:10px}.features,.pricing,.stats,.forms,.about-grid{grid-template-columns:1fr}.hero h1{font-size:34px}.hero{padding:42px 15px}.formbox{min-height:auto}}
+.client-btn{
+display:inline-block;
+background:#067bb6;
+color:white;
+padding:7px 18px;
+border-radius:7px;
+margin-bottom:6px;
+font-size:13px;
+font-weight:800;
+}
+
+.menu{
+display:flex;
+overflow:auto;
+background:linear-gradient(#fff,#e8e8e8);
+border-radius:10px;
+border:1px solid #b7b7b7;
+box-shadow:0 4px 14px #00000010;
+}
+
+.menu a{
+padding:12px 18px;
+border-right:1px solid #c8c8c8;
+font-size:13px;
+font-weight:800;
+white-space:nowrap;
+}
+
+.menu a:first-child{
+background:#84c400;
+color:white;
+}
+
+.hero{
+background:white;
+margin-top:16px;
+border-radius:24px;
+padding:70px 30px;
+text-align:center;
+box-shadow:0 18px 45px #00000010;
+}
+
+.hero h1{
+font-size:62px;
+line-height:1.05;
+font-weight:900;
+letter-spacing:-2px;
+}
+
+.hero h1 span{
+color:#3478f6;
+}
+
+.hero p{
+max-width:760px;
+margin:22px auto;
+font-size:19px;
+color:#60708a;
+line-height:1.7;
+}
+
+.hero-btn{
+display:inline-block;
+padding:14px 28px;
+border-radius:12px;
+font-weight:900;
+margin:6px;
+}
+
+.green{
+background:#079b3f;
+color:white;
+}
+
+.white{
+background:white;
+border:1px solid #d7e0eb;
+}
+
+.stats{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:20px;
+margin-top:45px;
+padding-top:28px;
+border-top:1px solid #dde6ef;
+}
+
+.stat{
+text-align:center;
+}
+
+.stat h2{
+font-size:32px;
+margin-bottom:8px;
+}
+
+.stat p{
+color:#60708a;
+font-size:15px;
+}
+
+.section-title{
+text-align:center;
+margin:58px 0 24px;
+}
+
+.section-title h2{
+font-size:38px;
+font-weight:900;
+margin-bottom:10px;
+}
+
+.section-title p{
+color:#60708a;
+font-size:17px;
+}
+
+.features{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:22px;
+}
+
+.card{
+background:white;
+padding:28px;
+border-radius:24px;
+box-shadow:0 14px 35px #00000010;
+border:1px solid #e4edf5;
+transition:.25s;
+}
+
+.card:hover{
+transform:translateY(-6px);
+box-shadow:0 24px 45px #079b3f20;
+}
+
+.icon{
+width:56px;
+height:56px;
+border-radius:16px;
+background:#eaf2ff;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:26px;
+margin-bottom:18px;
+color:#3478f6;
+}
+
+.card h3{
+font-size:22px;
+margin-bottom:10px;
+}
+
+.card p{
+line-height:1.7;
+font-size:15px;
+color:#5f7088;
+}
+
+.pricing{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:28px;
+}
+
+.price-card{
+background:white;
+border-radius:24px;
+overflow:hidden;
+box-shadow:0 20px 45px #00000012;
+border:1px solid #e5edf5;
+position:relative;
+transition:.25s;
+}
+
+.price-card:hover{
+transform:translateY(-8px);
+}
+
+.price-top{
+height:125px;
+background:linear-gradient(135deg,#0038ff,#10d4ff);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:54px;
+color:white;
+}
+
+.badge{
+position:absolute;
+top:102px;
+left:50%;
+transform:translateX(-50%);
+background:#004cff;
+color:white;
+padding:8px 18px;
+border-radius:30px;
+font-size:12px;
+font-weight:900;
+}
+
+.price-body{
+padding:28px;
+text-align:center;
+}
+
+.price-body h3{
+font-size:26px;
+margin-bottom:10px;
+}
+
+.price{
+font-size:48px;
+font-weight:900;
+color:#004cff;
+margin-bottom:10px;
+}
+
+.price-body p{
+font-size:15px;
+color:#60708a;
+margin-bottom:18px;
+}
+
+.price-body ul{
+list-style:none;
+text-align:left;
+line-height:2.2;
+font-size:15px;
+color:#1b2d48;
+margin-bottom:20px;
+}
+
+.price-body li:before{
+content:"✓";
+color:#004cff;
+font-weight:900;
+margin-right:10px;
+}
+
+.buy-btn{
+display:block;
+width:100%;
+padding:14px;
+border-radius:12px;
+background:#004cff;
+color:white;
+font-weight:900;
+}
+
+.generator{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:22px;
+}
+
+.generator-box{
+background:white;
+padding:28px;
+border-radius:24px;
+box-shadow:0 14px 35px #00000010;
+border:1px solid #e4edf5;
+}
+
+.generator-box h3{
+font-size:26px;
+margin-bottom:20px;
+}
+
+.generator-box input,
+.generator-box select{
+width:100%;
+padding:14px;
+border-radius:12px;
+border:1px solid #d7e0eb;
+margin-bottom:14px;
+font-family:Inter;
+}
+
+.generate-btn{
+width:100%;
+padding:15px;
+border:none;
+border-radius:14px;
+background:linear-gradient(135deg,#079b3f,#05bb5c);
+color:white;
+font-size:16px;
+font-weight:900;
+}
+
+.forms{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:22px;
+}
+
+.form-card{
+background:white;
+padding:28px;
+border-radius:24px;
+box-shadow:0 14px 35px #00000010;
+border:1px solid #e4edf5;
+display:flex;
+flex-direction:column;
+}
+
+.form-card h3{
+font-size:22px;
+margin-bottom:18px;
+}
+
+.form-card input{
+width:100%;
+padding:14px;
+border-radius:12px;
+border:1px solid #d7e0eb;
+margin-bottom:14px;
+font-family:Inter;
+}
+
+.form-card button{
+margin-top:auto;
+padding:14px;
+border:none;
+border-radius:12px;
+background:linear-gradient(135deg,#079b3f,#05bb5c);
+color:white;
+font-weight:900;
+}
+
+.about{
+background:white;
+padding:38px;
+border-radius:24px;
+box-shadow:0 18px 45px #00000010;
+border:1px solid #e5edf5;
+line-height:1.8;
+color:#5f7088;
+}
+
+.about h2{
+font-size:34px;
+margin-bottom:18px;
+color:#07152f;
+}
+
+.faq{
+max-width:920px;
+margin:auto;
+}
+
+.faq details{
+background:white;
+padding:20px 24px;
+border-radius:18px;
+margin-bottom:14px;
+box-shadow:0 12px 30px #00000010;
+border:1px solid #e5edf5;
+}
+
+.faq summary{
+cursor:pointer;
+font-weight:900;
+font-size:17px;
+}
+
+.faq p{
+margin-top:14px;
+line-height:1.8;
+color:#60708a;
+}
+
+.footer{
+margin-top:50px;
+}
+
+.footer-menu{
+background:linear-gradient(#fff,#ddd);
+padding:14px;
+text-align:center;
+border-top:1px solid #bbb;
+border-bottom:1px solid #bbb;
+}
+
+.footer-menu a{
+margin:0 12px;
+font-size:13px;
+font-weight:800;
+}
+
+.footer-bottom{
+background:#087da0;
+color:white;
+text-align:center;
+padding:20px;
+font-size:13px;
+line-height:1.8;
+}
+
+.whatsapp{
+position:fixed;
+right:24px;
+bottom:24px;
+width:64px;
+height:64px;
+border-radius:50%;
+background:#25d366;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:32px;
+color:white;
+box-shadow:0 12px 35px #25d36690;
+}
+
+@media(max-width:900px){
+.features,.pricing,.forms,.stats,.generator{
+grid-template-columns:1fr 1fr;
+}
+.hero h1{
+font-size:42px;
+}
+}
+
+@media(max-width:650px){
+.features,.pricing,.forms,.stats,.generator{
+grid-template-columns:1fr;
+}
+.topbar{
+display:block;
+text-align:center;
+}
+.contact{
+text-align:center;
+margin-top:10px;
+}
+.hero h1{
+font-size:35px;
+}
+.hero{
+padding:50px 20px;
+}
+}
 </style>
 </head>
+
 <body>
 
-<div class="wrap">
-  <div class="top">
-    <div class="logo">PaperGenius</div>
-    <div class="contact">
-      <a class="login" href="#login">CLIENT LOGIN</a><br>
-      WhatsApp: 0305-6583822
-    </div>
-  </div>
+<div class="container">
 
-  <nav class="menu">
-    <a href="#">Home</a><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#login">Login</a><a href="#signup">Sign Up</a><a href="#admin">Admin Login</a><a href="#forgot">Forgot Password</a><a href="#faq">FAQs</a>
-  </nav>
+<div class="topbar">
+<div class="logo">PaperGenius</div>
 
-  <section class="hero">
-    <h1>Create exam papers<br>in <span>minutes</span>, not hours</h1>
-    <p>AI-powered paper generator for schools and academies. Upload content, customize settings, and download professional exam papers instantly.</p>
-    <a class="btn" href="#pricing">Get Started</a><a class="btn alt" href="#pricing">View Pricing</a>
+<div class="contact">
+<a class="client-btn">CLIENT LOGIN</a><br>
+WhatsApp: 0305-6583822
+</div>
+</div>
 
-    <div class="stats">
-      <div class="stat"><b>250K+</b><p>Papers Generated</p></div>
-      <div class="stat"><b>18K+</b><p>Active Teachers</p></div>
-      <div class="stat"><b>98.7%</b><p>Satisfaction</p></div>
-      <div class="stat"><b>4.9/5</b><p>User Rating</p></div>
-    </div>
-  </section>
+<div class="menu">
+<a href="#">Home</a>
+<a href="#features">Features</a>
+<a href="#pricing">Pricing</a>
+<a href="#generator">Paper Generator</a>
+<a href="#login">Login</a>
+<a href="#signup">Sign Up</a>
+<a href="#admin">Admin Login</a>
+<a href="#faq">FAQs</a>
+</div>
 
-  <div class="title" id="features"><h2>Everything you need to create perfect papers</h2><p>Powerful features designed for educators and schools</p></div>
-  <section class="features">
-    <div class="feature"><div class="icon">⇧</div><h3>Smart File Upload</h3><p>Upload PDF, DOCX, JPG, or PNG files. OCR-ready system for scanned notes and book pages.</p></div>
-    <div class="feature"><div class="icon">✦</div><h3>AI Paper Generation</h3><p>Create MCQs, short questions, and long questions from uploaded educational content.</p></div>
-    <div class="feature"><div class="icon">□</div><h3>Premium PDF Output</h3><p>Professional exam papers with school branding, clean layout, and Urdu support.</p></div>
-  </section>
+<section class="hero">
+<h1>Create exam papers<br>in <span>minutes</span>, not hours</h1>
 
-  <div class="title" id="pricing"><h2>Premium Pricing Plans</h2><p>Simple packages for teachers, schools and academies</p></div>
-  <section class="pricing">
-    <div class="price-card"><div class="art">📘</div><h3>Basic Pack</h3><div class="amount">Rs 100</div><p>5 Papers • 7 Days</p><ul><li>5 paper credits</li><li>Premium paper layout</li><li>PDF download</li><li>School format</li></ul><a class="outline">Buy Now</a></div>
-    <div class="price-card"><div class="art">🎓</div><div class="popular">BEST VALUE</div><h3>Standard Pack</h3><div class="amount">Rs 300</div><p>15 Papers • 15 Days</p><ul><li>15 paper credits</li><li>Best for teachers</li><li>All subjects support</li><li>Export formats</li></ul><a class="outline">Buy Now</a></div>
-    <div class="price-card"><div class="art">🚀</div><h3>Monthly Pack</h3><div class="amount">Rs 500</div><p>30 Papers • 30 Days</p><ul><li>30 paper credits</li><li>Best for academies</li><li>Monthly usage</li><li>Priority support</li></ul><a class="outline">Buy Now</a></div>
-  </section>
+<p>
+AI-powered paper generator for schools and academies.
+Upload content, customize settings, and generate premium school-style papers instantly.
+</p>
 
-  <div class="title"><h2>Account Access</h2><p>User login, signup, admin login and password recovery</p></div>
-  <section class="forms">
-    <div class="formbox" id="login"><h3>User Login</h3><input placeholder="Email Address"><input placeholder="Password" type="password"><button>Login</button></div>
-    <div class="formbox" id="signup"><h3>Create Account</h3><input placeholder="Full Name"><input placeholder="Email Address"><input placeholder="Password" type="password"><button>Sign Up</button></div>
-    <div class="formbox" id="admin"><h3>Admin Login</h3><input placeholder="Admin Email"><input placeholder="Admin Password" type="password"><button>Admin Login</button></div>
-    <div class="formbox" id="forgot"><h3>Forgot Password</h3><input placeholder="Enter your email"><button>Reset Password</button></div>
-    <div class="formbox"><h3>Payment Support</h3><input placeholder="Transaction ID"><input placeholder="WhatsApp Number"><button>Submit Payment</button></div>
-    <div class="formbox"><h3>Quick Contact</h3><input placeholder="Your Name"><input placeholder="Your Message"><button>Send Message</button></div>
-  </section>
+<a class="hero-btn green">Get Started</a>
+<a class="hero-btn white">View Pricing</a>
 
-  <div class="title"><h2>About PaperGenius</h2><p>A smart education tool for modern teachers</p></div>
-  <section class="about">
-    <div class="about-grid">
-      <div><h2>Why PaperGenius?</h2><p>PaperGenius is designed for schools, academies, tuition centers and teachers who want to create professional exam papers quickly. Teachers can upload educational content, choose paper settings and generate clean school-style papers with proper sections, marks and layout.</p></div>
-      <div class="about-badge"><b>Fast</b><p>Premium exam paper creation for modern schools.</p></div>
-    </div>
-  </section>
+<div class="stats">
+<div class="stat"><h2>250K+</h2><p>Papers Generated</p></div>
+<div class="stat"><h2>18K+</h2><p>Teachers</p></div>
+<div class="stat"><h2>98.7%</h2><p>Satisfaction</p></div>
+<div class="stat"><h2>4.9/5</h2><p>Rating</p></div>
+</div>
+</section>
 
-  <div class="title" id="faq"><h2>Frequently Asked Questions</h2><p>Everything teachers need to know before starting</p></div>
-  <section class="faq">
-    <details open><summary>How does PaperGenius create papers?</summary><p>You upload educational content and choose paper settings. The system creates a structured school-style exam paper.</p></details>
-    <details><summary>Which packages are available?</summary><p>Basic Pack Rs 100 for 5 papers, Standard Pack Rs 300 for 15 papers, and Monthly Pack Rs 500 for 30 papers.</p></details>
-    <details><summary>Is Urdu supported?</summary><p>Yes, Urdu paper formatting and Jameel Noori Nastaleeq style support will be included in the full system.</p></details>
-    <details><summary>How do credits work?</summary><p>Each generated paper uses one credit. Credits are added after payment approval.</p></details>
-    <details><summary>Can I contact support?</summary><p>Yes, WhatsApp support is available through the green button.</p></details>
-  </section>
+<div class="section-title" id="features">
+<h2>Premium Features</h2>
+<p>Everything needed for modern exam paper generation</p>
+</div>
+
+<section class="features">
+
+<div class="card">
+<div class="icon">⇧</div>
+<h3>Smart Upload</h3>
+<p>Upload PDF, DOCX, JPG, and PNG educational files with OCR-ready structure.</p>
+</div>
+
+<div class="card">
+<div class="icon">✦</div>
+<h3>AI Paper Generator</h3>
+<p>Generate MCQs, short and long questions from uploaded educational content.</p>
+</div>
+
+<div class="card">
+<div class="icon">□</div>
+<h3>Premium PDF</h3>
+<p>Download school-style professional papers with clean formatting and layout.</p>
+</div>
+
+</section>
+
+<div class="section-title" id="pricing">
+<h2>Pricing Plans</h2>
+<p>Affordable plans for teachers and academies</p>
+</div>
+
+<section class="pricing">
+
+<div class="price-card">
+<div class="price-top">📘</div>
+
+<div class="price-body">
+<h3>Basic Pack</h3>
+<div class="price">Rs 100</div>
+<p>5 Papers • 7 Days</p>
+
+<ul>
+<li>5 paper credits</li>
+<li>Premium layouts</li>
+<li>PDF downloads</li>
+<li>Fast generation</li>
+</ul>
+
+<a class="buy-btn">Buy Now</a>
+</div>
+</div>
+
+<div class="price-card">
+<div class="price-top">🎓</div>
+<div class="badge">BEST VALUE</div>
+
+<div class="price-body">
+<h3>Standard Pack</h3>
+<div class="price">Rs 300</div>
+<p>15 Papers • 15 Days</p>
+
+<ul>
+<li>15 paper credits</li>
+<li>All subjects</li>
+<li>Priority processing</li>
+<li>Modern paper styles</li>
+</ul>
+
+<a class="buy-btn">Buy Now</a>
+</div>
+</div>
+
+<div class="price-card">
+<div class="price-top">🚀</div>
+
+<div class="price-body">
+<h3>Monthly Pack</h3>
+<div class="price">Rs 500</div>
+<p>30 Papers • 30 Days</p>
+
+<ul>
+<li>30 paper credits</li>
+<li>Best for academies</li>
+<li>Monthly usage</li>
+<li>Priority support</li>
+</ul>
+
+<a class="buy-btn">Buy Now</a>
+</div>
+</div>
+
+</section>
+
+<div class="section-title" id="generator">
+<h2>Paper Generator</h2>
+<p>Create professional papers in seconds</p>
+</div>
+
+<section class="generator">
+
+<div class="generator-box">
+<h3>Paper Details</h3>
+
+<input placeholder="School / Academy Name">
+<input placeholder="WhatsApp Number">
+<input placeholder="Class">
+<input placeholder="Subject">
+<input placeholder="Total Marks">
+<input placeholder="Pass Marks">
+<input placeholder="Time Duration">
+
+</div>
+
+<div class="generator-box">
+<h3>Paper Settings</h3>
+
+<input placeholder="Total Pages">
+<input placeholder="MCQs Count">
+<input placeholder="Short Questions Count">
+<input placeholder="Long Questions Count">
+
+<select>
+<option>Easy Difficulty</option>
+<option>Medium Difficulty</option>
+<option>Hard Difficulty</option>
+</select>
+
+<input type="file">
+
+<button class="generate-btn">Generate Paper</button>
+
+</div>
+
+</section>
+
+<div class="section-title">
+<h2>Account Access</h2>
+<p>User and admin account system</p>
+</div>
+
+<section class="forms">
+
+<div class="form-card" id="login">
+<h3>User Login</h3>
+<input placeholder="Email Address">
+<input type="password" placeholder="Password">
+<button>Login</button>
+</div>
+
+<div class="form-card" id="signup">
+<h3>Create Account</h3>
+<input placeholder="Full Name">
+<input placeholder="Email Address">
+<input type="password" placeholder="Password">
+<button>Sign Up</button>
+</div>
+
+<div class="form-card" id="admin">
+<h3>Admin Login</h3>
+<input placeholder="Admin Email">
+<input type="password" placeholder="Admin Password">
+<button>Admin Login</button>
+</div>
+
+</section>
+
+<div class="section-title">
+<h2>About PaperGenius</h2>
+<p>Smart education technology for teachers</p>
+</div>
+
+<section class="about">
+<h2>Why choose PaperGenius?</h2>
+
+<p>
+PaperGenius is built for schools, teachers, tuition centers, and academies that want premium professional exam papers without wasting hours manually formatting documents.
+</p>
+
+<p>
+Teachers can upload educational material, customize question settings, and generate clean printable papers instantly with modern layouts and smart formatting.
+</p>
+
+</section>
+
+<div class="section-title" id="faq">
+<h2>Frequently Asked Questions</h2>
+<p>Everything teachers need to know</p>
+</div>
+
+<section class="faq">
+
+<details open>
+<summary>How does PaperGenius work?</summary>
+<p>Upload educational content, customize settings, and generate premium school-style papers instantly.</p>
+</details>
+
+<details>
+<summary>Which file formats are supported?</summary>
+<p>PDF, DOCX, JPG, and PNG files are supported.</p>
+</details>
+
+<details>
+<summary>How do credits work?</summary>
+<p>Every generated paper uses one credit according to your selected package.</p>
+</details>
+
+<details>
+<summary>Is Urdu supported?</summary>
+<p>Yes, Urdu formatting and Urdu paper generation support will be included.</p>
+</details>
+
+</section>
+
 </div>
 
 <footer class="footer">
-  <div class="footer-menu"><a>Home</a> | <a>Pricing</a> | <a>Payment Options</a> | <a>Privacy Policy</a> | <a>Contact</a></div>
-  <div class="footer-bottom">Copyright © 2026 PaperGenius - All Rights Reserved.<br>WhatsApp Support: 0305-6583822</div>
+
+<div class="footer-menu">
+<a>Home</a>
+<a>Pricing</a>
+<a>Contact</a>
+<a>Privacy Policy</a>
+<a>Terms</a>
+</div>
+
+<div class="footer-bottom">
+Copyright © 2026 PaperGenius - All Rights Reserved.<br>
+WhatsApp Support: 0305-6583822
+</div>
+
 </footer>
 
-<a class="whatsapp" href="https://wa.me/923056583822" target="_blank">☎</a>
+<a class="whatsapp" href="https://wa.me/923056583822">☎</a>
 
 </body>
 </html>`;
 
 http.createServer((req,res)=>{
-  res.writeHead(200,{"Content-Type":"text/html; charset=utf-8"});
-  res.end(html);
-}).listen(3000,()=>console.log("PaperGenius premium site running"));
+res.writeHead(200,{"Content-Type":"text/html"});
+res.end(html);
+}).listen(3000);
