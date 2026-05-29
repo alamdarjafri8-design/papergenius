@@ -1,17 +1,42 @@
 const express = require("express");
 const multer = require("multer");
 const fs = require("fs");
+const path = require("path");
+const PDFDocument = require("pdfkit");
 
 const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-const upload = multer({
-  dest: "uploads/"
-});
-
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+app.use("/generated-papers", express.static("generated-papers"));
+
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
+
+if (!fs.existsSync("generated-papers")) {
+  fs.mkdirSync("generated-papers");
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 20 * 1024 * 1024
+  }
+});
 
 app.get("/", (req, res) => {
 
@@ -20,6 +45,7 @@ res.send(`
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -210,31 +236,8 @@ font-weight:700;
 font-size:16px;
 }
 
-.section{
-padding:90px 20px;
-}
-
-.section-title{
-text-align:center;
-margin-bottom:55px;
-}
-
-.section-title h2{
-font-size:52px;
-margin-bottom:18px;
-letter-spacing:-2px;
-}
-
-.section-title p{
-max-width:700px;
-margin:auto;
-font-size:18px;
-line-height:1.8;
-color:#53657f;
-}
-
 .generator-card{
-max-width:950px;
+max-width:1050px;
 margin:auto;
 background:#fff;
 border-radius:32px;
@@ -243,39 +246,11 @@ border:1px solid #dbeafe;
 box-shadow:0 20px 70px rgba(16,24,40,.08);
 }
 
-.upload-box{
-padding:55px 25px;
-border-radius:28px;
-border:2px dashed #98c2ff;
-background:#f8fbff;
-text-align:center;
-}
-
-.upload-box h3{
-font-size:34px;
-margin-bottom:14px;
-}
-
-.upload-box p{
-color:#53657f;
-margin-bottom:25px;
-font-size:16px;
-}
-
-.upload-box input{
-padding:16px;
-border-radius:16px;
-border:1px solid #dbeafe;
-background:#fff;
-width:100%;
-max-width:420px;
-}
-
 .form-grid{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:22px;
-margin-top:28px;
+gap:20px;
+margin-top:25px;
 }
 
 .field label{
@@ -295,7 +270,7 @@ font-size:15px;
 
 .submit-btn{
 width:100%;
-margin-top:26px;
+margin-top:30px;
 padding:18px;
 border:none;
 border-radius:18px;
@@ -303,132 +278,8 @@ font-size:18px;
 font-weight:900;
 background:linear-gradient(135deg,#2f7df6,#22c7b8);
 color:#fff;
-box-shadow:0 18px 40px rgba(47,125,246,.25);
 cursor:pointer;
-}
-
-.features-grid{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:26px;
-}
-
-.feature-card{
-background:#fff;
-border-radius:28px;
-padding:34px;
-border:1px solid #dbeafe;
-box-shadow:0 18px 50px rgba(16,24,40,.06);
-}
-
-.icon{
-width:64px;
-height:64px;
-border-radius:18px;
-background:linear-gradient(135deg,#eaf3ff,#defbf7);
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:28px;
-font-weight:900;
-color:#2f7df6;
-margin-bottom:20px;
-}
-
-.feature-card h3{
-font-size:25px;
-margin-bottom:12px;
-}
-
-.feature-card p{
-line-height:1.8;
-color:#53657f;
-}
-
-.pricing-grid{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:26px;
-}
-
-.price-card{
-background:#fff;
-border-radius:30px;
-padding:38px;
-border:1px solid #dbeafe;
-box-shadow:0 18px 60px rgba(16,24,40,.06);
-text-align:center;
-}
-
-.price-card h3{
-font-size:28px;
-margin-bottom:18px;
-}
-
-.price{
-font-size:58px;
-font-weight:900;
-margin-bottom:12px;
-}
-
-.price-card p{
-margin-bottom:10px;
-font-weight:700;
-color:#53657f;
-}
-
-.faq{
-max-width:920px;
-margin:auto;
-}
-
-.faq-item{
-background:#fff;
-padding:26px;
-border-radius:20px;
-margin-bottom:18px;
-border:1px solid #dbeafe;
-box-shadow:0 15px 40px rgba(16,24,40,.05);
-}
-
-.faq-item h4{
-font-size:21px;
-margin-bottom:10px;
-}
-
-.faq-item p{
-line-height:1.8;
-color:#53657f;
-}
-
-footer{
-background:#eef3f8;
-padding:70px 20px 0;
-border-top:1px solid #dbeafe;
-}
-
-.footer-grid{
-display:grid;
-grid-template-columns:2fr 1fr 1fr 1fr;
-gap:35px;
-}
-
-.footer-grid h3{
-margin-bottom:18px;
-}
-
-.footer-grid p{
-margin-bottom:12px;
-color:#53657f;
-}
-
-.copy{
-margin-top:55px;
-padding:18px;
-background:#0d86ad;
-text-align:center;
-color:#fff;
-font-size:14px;
+box-shadow:0 18px 40px rgba(47,125,246,.25);
 }
 
 .whatsapp{
@@ -440,58 +291,26 @@ background:#22c55e;
 color:#fff;
 border-radius:50px;
 font-weight:900;
-box-shadow:0 18px 40px rgba(34,197,94,.30);
 }
 
-@media(max-width:900px){
+@media(max-width:700px){
 
-.stats-box,
-.features-grid,
-.pricing-grid,
-.footer-grid{
-grid-template-columns:1fr 1fr;
-}
-
-.hero h1{
-font-size:56px;
-}
-
-}
-
-@media(max-width:650px){
-
-.stats-box,
-.features-grid,
-.pricing-grid,
-.footer-grid,
 .form-grid{
 grid-template-columns:1fr;
 }
 
 .hero h1{
-font-size:42px;
+font-size:46px;
 }
 
-.section-title h2{
-font-size:36px;
-}
-
-.navbar{
-flex-direction:column;
-}
-
-.nav-links{
-width:100%;
-justify-content:center;
-}
-
-.start-btn{
-margin:15px;
+.stats-box{
+grid-template-columns:1fr;
 }
 
 }
 
 </style>
+
 </head>
 
 <body>
@@ -517,10 +336,10 @@ WhatsApp Support: 0300-000000
 
 <div class="nav-links">
 <a href="#">Home</a>
-<a href="#generator">Paper Generator</a>
-<a href="#features">Features</a>
-<a href="#pricing">Pricing</a>
-<a href="#faq">FAQ</a>
+<a href="#">Paper Generator</a>
+<a href="#">Features</a>
+<a href="#">Pricing</a>
+<a href="#">FAQ</a>
 </div>
 
 <a class="start-btn" href="#generator">
@@ -542,22 +361,18 @@ Create exam papers in <span>minutes</span>, not hours
 </h1>
 
 <p>
-Upload your original JPG, PNG, PDF or DOCX file and generate premium exam papers instantly.
+Upload original JPG, PNG, PDF or DOCX file and generate professional exam papers instantly.
 </p>
 
 <div class="hero-btns">
 
-<a href="#generator">
 <button class="btn btn-main">
 Get Started
 </button>
-</a>
 
-<a href="#pricing">
 <button class="btn btn-light">
 View Pricing
 </button>
-</a>
 
 </div>
 
@@ -597,56 +412,72 @@ View Pricing
 
 </section>
 
-<section class="section" id="generator">
+<section id="generator" style="padding:80px 20px;">
 
 <div class="container">
-
-<div class="section-title">
-<h2>Generate Paper From Original File</h2>
-
-<p>
-Upload original study material and generate paper automatically.
-</p>
-
-</div>
 
 <div class="generator-card">
 
 <form action="/generate-paper" method="POST" enctype="multipart/form-data">
 
-<div class="upload-box">
-
-<h3>Upload File</h3>
-
-<p>
-Supported: JPG, PNG, PDF, DOCX
-</p>
-
-<input type="file" name="paperFile" required>
-
-</div>
-
 <div class="form-grid">
 
 <div class="field">
+<label>Academy / School Name</label>
+<input type="text" name="academyName" required>
+</div>
 
-<label>Paper Type</label>
+<div class="field">
+<label>Class Name</label>
+<input type="text" name="className" required>
+</div>
 
-<select name="paperType">
-<option>Mixed Paper</option>
-<option>MCQs Only</option>
-<option>Short Questions</option>
-<option>Long Questions</option>
+<div class="field">
+<label>Subject Name</label>
+<input type="text" name="subjectName" required>
+</div>
+
+<div class="field">
+<label>Language</label>
+
+<select name="language">
+
+<option value="english">English</option>
+<option value="urdu">Urdu</option>
+<option value="both">English + Urdu</option>
+
 </select>
 
 </div>
 
 <div class="field">
+<label>MCQs Count</label>
+<input type="number" name="mcqs" value="5">
+</div>
 
-<label>Total Marks</label>
+<div class="field">
+<label>Short Questions Count</label>
+<input type="number" name="shortQuestions" value="5">
+</div>
 
-<input type="number" placeholder="Enter total marks">
+<div class="field">
+<label>Long Questions Count</label>
+<input type="number" name="longQuestions" value="3">
+</div>
 
+<div class="field">
+<label>Fill In The Blanks Count</label>
+<input type="number" name="blanks" value="5">
+</div>
+
+<div class="field">
+<label>Tick Correct Count</label>
+<input type="number" name="ticks" value="5">
+</div>
+
+<div class="field">
+<label>Upload Original File</label>
+<input type="file" name="paperFile" required>
 </div>
 
 </div>
@@ -663,156 +494,6 @@ Generate Paper
 
 </section>
 
-<section class="section" id="features">
-
-<div class="container">
-
-<div class="section-title">
-
-<h2>Premium Features</h2>
-
-<p>
-Everything you need to generate professional exam papers.
-</p>
-
-</div>
-
-<div class="features-grid">
-
-<div class="feature-card">
-<div class="icon">AI</div>
-<h3>AI Generation</h3>
-<p>Generate papers directly from uploaded content.</p>
-</div>
-
-<div class="feature-card">
-<div class="icon">PDF</div>
-<h3>PDF Export</h3>
-<p>Download premium formatted papers instantly.</p>
-</div>
-
-<div class="feature-card">
-<div class="icon">✓</div>
-<h3>Auto Delete</h3>
-<p>Uploaded files auto delete automatically after 15 minutes.</p>
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-<section class="section" id="pricing">
-
-<div class="container">
-
-<div class="section-title">
-
-<h2>Simple Pricing</h2>
-
-<p>
-Affordable credit plans for teachers and academies.
-</p>
-
-</div>
-
-<div class="pricing-grid">
-
-<div class="price-card">
-<h3>Basic Pack</h3>
-<div class="price">Rs 100</div>
-<p>5 Credits</p>
-<p>Valid For 7 Days</p>
-</div>
-
-<div class="price-card">
-<h3>Standard Pack</h3>
-<div class="price">Rs 300</div>
-<p>15 Credits</p>
-<p>Valid For 15 Days</p>
-</div>
-
-<div class="price-card">
-<h3>Pro Pack</h3>
-<div class="price">Rs 500</div>
-<p>30 Credits</p>
-<p>Valid For 25 Days</p>
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-<section class="section" id="faq">
-
-<div class="container">
-
-<div class="section-title">
-<h2>Frequently Asked Questions</h2>
-</div>
-
-<div class="faq">
-
-<div class="faq-item">
-<h4>How does PaperGenius work?</h4>
-<p>Upload your original file and generate paper automatically.</p>
-</div>
-
-<div class="faq-item">
-<h4>Which file types are supported?</h4>
-<p>JPG, PNG, PDF and DOCX are supported.</p>
-</div>
-
-<div class="faq-item">
-<h4>Will uploaded files stay forever?</h4>
-<p>No. Uploaded files auto delete after 15 minutes.</p>
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-<footer>
-
-<div class="container footer-grid">
-
-<div>
-<h3>PaperGenius</h3>
-<p>Premium AI Exam Paper Generator.</p>
-</div>
-
-<div>
-<h3>Quick Links</h3>
-<p>Home</p>
-<p>Features</p>
-<p>Pricing</p>
-</div>
-
-<div>
-<h3>Legal</h3>
-<p>Privacy Policy</p>
-<p>Terms</p>
-</div>
-
-<div>
-<h3>Contact</h3>
-<p>support@papergenius.com</p>
-<p>Lahore, Pakistan</p>
-</div>
-
-</div>
-
-<div class="copy">
-© 2026 PaperGenius. All rights reserved.
-</div>
-
-</footer>
-
 <a class="whatsapp" href="#">
 WhatsApp Support
 </a>
@@ -824,109 +505,203 @@ WhatsApp Support
 
 });
 
-app.post("/generate-paper", upload.single("paperFile"), (req, res) => {
+app.post("/generate-paper", upload.single("paperFile"), async (req, res) => {
 
-if (!req.file) {
-return res.send("No file uploaded");
+try {
+
+const {
+academyName,
+className,
+subjectName,
+language,
+mcqs,
+shortQuestions,
+longQuestions,
+blanks,
+ticks
+} = req.body;
+
+const pdfName = "paper-" + Date.now() + ".pdf";
+
+const pdfPath = path.join("generated-papers", pdfName);
+
+const doc = new PDFDocument({
+size: "A4",
+margin: 50
+});
+
+const stream = fs.createWriteStream(pdfPath);
+
+doc.pipe(stream);
+
+doc.fontSize(22).text(academyName, {
+align: "center"
+});
+
+doc.moveDown(0.5);
+
+doc.fontSize(16).text("Class: " + className, {
+align: "center"
+});
+
+doc.text("Subject: " + subjectName, {
+align: "center"
+});
+
+doc.moveDown(2);
+
+doc.fontSize(18).text("Generated Exam Paper", {
+align: "center"
+});
+
+doc.moveDown(2);
+
+if (language === "english") {
+
+doc.fontSize(15).text("Language: English");
+
+} else if (language === "urdu") {
+
+doc.fontSize(15).text("Language: Urdu");
+
+} else {
+
+doc.fontSize(15).text("Language: English + Urdu");
+
 }
+
+doc.moveDown(2);
+
+doc.fontSize(18).text("MCQs");
+
+for (let i = 1; i <= Number(mcqs); i++) {
+
+doc.moveDown(0.7);
+
+doc.fontSize(13).text(
+i + ". Sample MCQ Question from uploaded file?"
+);
+
+doc.text("A) Option 1");
+doc.text("B) Option 2");
+doc.text("C) Option 3");
+doc.text("D) Option 4");
+
+}
+
+doc.addPage();
+
+doc.fontSize(18).text("Short Questions");
+
+for (let i = 1; i <= Number(shortQuestions); i++) {
+
+doc.moveDown(1);
+
+doc.fontSize(13).text(
+i + ". Write short answer from uploaded content."
+);
+
+}
+
+doc.moveDown(2);
+
+doc.fontSize(18).text("Long Questions");
+
+for (let i = 1; i <= Number(longQuestions); i++) {
+
+doc.moveDown(1);
+
+doc.fontSize(13).text(
+i + ". Explain the topic in detail."
+);
+
+}
+
+doc.addPage();
+
+doc.fontSize(18).text("Fill In The Blanks");
+
+for (let i = 1; i <= Number(blanks); i++) {
+
+doc.moveDown(1);
+
+doc.fontSize(13).text(
+i + ". ____________ is important."
+);
+
+}
+
+doc.moveDown(2);
+
+doc.fontSize(18).text("Tick Correct Answer");
+
+for (let i = 1; i <= Number(ticks); i++) {
+
+doc.moveDown(1);
+
+doc.fontSize(13).text(
+i + ". Tick the correct answer."
+);
+
+}
+
+doc.end();
+
+stream.on("finish", () => {
 
 setTimeout(() => {
 
-try{
+try {
+
+if (req.file && fs.existsSync(req.file.path)) {
 fs.unlinkSync(req.file.path);
-}catch(e){}
+}
+
+if (fs.existsSync(pdfPath)) {
+fs.unlinkSync(pdfPath);
+}
+
+} catch (e) {}
 
 }, 15 * 60 * 1000);
 
 res.send(`
 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Upload Success</title>
+<title>Paper Generated</title>
 
 <style>
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
-
 body{
-font-family:Arial,sans-serif;
+font-family:Arial;
 background:#eef5fb;
 display:flex;
-align-items:center;
 justify-content:center;
-min-height:100vh;
-padding:20px;
+align-items:center;
+height:100vh;
 }
 
-.success-box{
-width:100%;
-max-width:650px;
+.box{
 background:#fff;
+padding:50px;
 border-radius:30px;
-padding:55px 35px;
 text-align:center;
-border:1px solid #dbeafe;
-box-shadow:0 20px 70px rgba(16,24,40,.10);
+width:600px;
+box-shadow:0 20px 70px rgba(0,0,0,.08);
 }
 
-.icon{
-width:110px;
-height:110px;
-margin:auto auto 28px;
-border-radius:50%;
-background:linear-gradient(135deg,#2f7df6,#22c7b8);
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:54px;
-font-weight:bold;
-color:#fff;
-box-shadow:0 18px 45px rgba(47,125,246,.30);
-}
-
-h1{
-font-size:52px;
-margin-bottom:18px;
-color:#07142f;
-}
-
-p{
-font-size:18px;
-line-height:1.8;
-margin-bottom:12px;
-color:#53657f;
-}
-
-.info{
-margin-top:28px;
-padding:18px;
-border-radius:18px;
-background:#f4faff;
-border:1px solid #dbeafe;
-font-size:15px;
-font-weight:900;
-color:#2f7df6;
-}
-
-.btn{
+a{
 display:inline-block;
-margin-top:32px;
-padding:18px 36px;
-border-radius:16px;
+margin-top:25px;
+padding:18px 30px;
 background:linear-gradient(135deg,#2f7df6,#22c7b8);
 color:#fff;
-font-size:17px;
-font-weight:900;
-box-shadow:0 18px 40px rgba(47,125,246,.25);
+border-radius:16px;
+font-weight:bold;
+text-decoration:none;
 }
 
 </style>
@@ -935,29 +710,27 @@ box-shadow:0 18px 40px rgba(47,125,246,.25);
 
 <body>
 
-<div class="success-box">
-
-<div class="icon">
-✓
-</div>
+<div class="box">
 
 <h1>
-File Uploaded
+Paper Generated Successfully
 </h1>
 
 <p>
-Your file uploaded successfully.
+Your paper generated successfully from uploaded file.
 </p>
 
 <p>
-Uploaded file will auto delete permanently after 15 minutes.
+File and paper auto delete after 15 minutes.
 </p>
 
-<div class="info">
-PaperGenius received your original file successfully.
-</div>
+<a href="/generated-papers/${pdfName}" download>
+Download Paper PDF
+</a>
 
-<a href="/" class="btn">
+<br><br>
+
+<a href="/">
 Back To Home
 </a>
 
@@ -967,6 +740,16 @@ Back To Home
 </html>
 
 `);
+
+});
+
+} catch (error) {
+
+console.log(error);
+
+res.send("Error generating paper");
+
+}
 
 });
 
