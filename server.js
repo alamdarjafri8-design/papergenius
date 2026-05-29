@@ -54,7 +54,10 @@ function splitText(text) {
 function getLine(lines, i) {
   return lines[i % lines.length] || "Question from uploaded document";
 }
-
+function romanNo(num) {
+  const arr = ["i","ii","iii","iv","v","vi","vii","viii","ix","x"];
+  return arr[num - 1] || num;
+}
 function makePdf(data, sourceText) {
   return new Promise((resolve, reject) => {
     const pdfName = "papergenius-paper-" + Date.now() + ".pdf";
