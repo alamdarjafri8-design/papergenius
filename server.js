@@ -2,8 +2,8 @@ const express = require("express");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
-const PDFDocument = require("pdfkit");
 const mammoth = require("mammoth");
+const puppeteer = require("puppeteer");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -45,25 +45,30 @@ async function readFileText(file) {
 
 function splitText(text) {
   return text
-    .replace(/\s+/g, " ")
-    .split(/[۔.؟?!]/)
+    .replace(/\r/g, "\n")
+    .split(/\n|[۔؟?!.]/)
     .map(x => x.trim())
-    .filter(x => x.length > 15);
+    .filter(x => x.length > 2);
 }
 
 function getLine(lines, i) {
   return lines[i % lines.length] || "Question from uploaded document";
 }
 
-function romanNo(num) {
-  const arr = ["i","ii","iii","iv","v","vi","vii","viii","ix","x"];
-  return arr[num - 1] || num;
+function escapeHtml(str = "") {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function translateToUrdu(text) {
   return text
     .replaceAll("Physics Chapter 10 - Simple Harmonic Motion", "فزکس باب 10 - سادہ ارتعاشی حرکت")
     .replaceAll("Simple harmonic motion", "سادہ ارتعاشی حرکت")
+    .replaceAll("simple harmonic motion", "سادہ ارتعاشی حرکت")
     .replaceAll("The SI unit of force is Newton", "قوت کی بین الاقوامی اکائی نیوٹن ہے")
     .replaceAll("time period", "دوری وقت")
     .replaceAll("simple pendulum", "سادہ پنڈولم")
@@ -77,439 +82,391 @@ function translateToUrdu(text) {
     .replaceAll("energy", "توانائی");
 }
 
-function makePdf(data, sourceText) {
-  return new Promise((resolve, reject) => {
-    const pdfName = "papergenius-paper-" + Date.now() + ".pdf";
-    const pdfPath = path.join(paperDir, pdfName);
+function buildPaperHtml(data, sourceText) {
+  const lines = splitText(sourceText);
+  const language = (data.language || "english").toLowerCase();
 
-    const doc = new PDFDocument({ size: "A4", margin: 25 });
-    const stream = fs.createWriteStream(pdfPath);
-    doc.pipe(stream);
+  const mcqs = count(data.mcqs);
+  const shorts = count(data.shortQuestions);
+  const longs = count(data.longQuestions);
+  const blanks = count(data.blanks);
+  const ticks = count(data.ticks);
 
-    const urduFontPath = path.join(__dirname, "Jameel Noori Nastaleeq.ttf");
-    if (fs.existsSync(urduFontPath)) {
-      doc.registerFont("UrduFont", urduFontPath);
-    }
+  const isUrdu = language === "urdu";
+  const isArabic = language === "arabic";
+  const isRTL = isUrdu || isArabic;
+  const isBoth = language === "both";
 
-    const lines = splitText(sourceText);
-
-    const pageW = 595.28;
-    const pageH = 841.89;
-    const left = 35;
-    const right = 560;
-    const width = right - left;
-
-    function cleanLine(i) {
-      return getLine(lines, i).replace(/\s+/g, " ").trim();
-    }
-
-    function useEnglishFont(size = 11.5, bold = false) {
-      doc.font(bold ? "Times-Bold" : "Times-Roman").fontSize(size);
-    }
-
-    function useUrduFont(size = 13) {
-      if (fs.existsSync(urduFontPath)) {
-        doc.font("UrduFont").fontSize(size);
-      } else {
-        doc.font("Times-Roman").fontSize(size);
+  const fontPath = path.join(__dirname, "Jameel Noori Nastaleeq.ttf");
+  let fontCss = "";
+  if (fs.existsSync(fontPath)) {
+    const fontBase64 = fs.readFileSync(fontPath).toString("base64");
+    fontCss = `
+      @font-face{
+        font-family:'PaperUrdu';
+        src:url(data:font/truetype;charset=utf-8;base64,${fontBase64}) format('truetype');
+        font-weight:normal;
+        font-style:normal;
       }
-    }
+    `;
+  }
 
-    function addBorder() {
-      doc.lineWidth(1);
-      doc.rect(25, 25, pageW - 50, pageH - 50).stroke();
-      doc.rect(31, 31, pageW - 62, pageH - 62).stroke();
-    }
+  function line(i) {
+    return escapeHtml(getLine(lines, i));
+  }
 
-    function checkPage(h = 80) {
-      if (doc.y + h > 790) {
-        doc.addPage();
-        addBorder();
-        doc.y = 45;
-      }
-    }
+  function urduLine(i) {
+    return escapeHtml(getLine(lines, i));
+  }
 
-    function cell(x, y, w, h, text, opt = {}) {
-      doc.rect(x, y, w, h).stroke();
+  function bothUrdu(i) {
+    return escapeHtml(translateToUrdu(getLine(lines, i)));
+  }
 
-      if (opt.urdu) {
-        useUrduFont(opt.size || 13);
-      } else {
-        useEnglishFont(opt.size || 11.5, opt.bold || false);
-      }
+  let html = "";
 
-      doc.text(text || "", x + 5, y + 6, {
-        width: w - 10,
-        height: h - 10,
-        align: opt.align || "left"
-      });
-    }
+  html += `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+${fontCss}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#000}
+.paper{
+  width:794px;
+  min-height:1123px;
+  margin:0 auto;
+  padding:22px;
+  border:3px double #000;
+  background:#fff;
+  color:#000;
+  font-family:${isRTL ? "'PaperUrdu','Jameel Noori Nastaleeq','Noto Nastaliq Urdu',serif" : "Times New Roman,serif"};
+  direction:${isRTL ? "rtl" : "ltr"};
+}
+.header{
+  border:2px solid #000;
+  text-align:center;
+  padding:12px 10px;
+  margin-bottom:10px;
+}
+.school{
+  font-size:${isRTL ? "34px" : "30px"};
+  font-weight:900;
+  line-height:1.4;
+}
+.subtitle{
+  font-size:${isRTL ? "20px" : "16px"};
+  margin-top:2px;
+}
+.info{
+  width:100%;
+  border-collapse:collapse;
+  margin-bottom:12px;
+  font-size:${isRTL ? "20px" : "15px"};
+}
+.info td{
+  border:1px solid #000;
+  padding:7px 9px;
+  height:34px;
+}
+.section-title{
+  border:2px solid #000;
+  padding:6px 10px;
+  margin:12px 0 8px;
+  font-size:${isRTL ? "22px" : "17px"};
+  font-weight:900;
+  text-align:${isRTL ? "right" : "left"};
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+.question-box{
+  border:1px solid #000;
+  padding:10px 12px;
+  margin-bottom:10px;
+  font-size:${isRTL ? "20px" : "15px"};
+  line-height:${isRTL ? "2.1" : "1.55"};
+}
+.mcq-item{
+  margin-bottom:10px;
+  page-break-inside:avoid;
+}
+.q{
+  font-weight:700;
+  margin-bottom:3px;
+}
+.options{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:6px;
+  margin-top:4px;
+}
+.option{
+  border:1px solid #000;
+  padding:4px 6px;
+  min-height:24px;
+  text-align:${isRTL ? "right" : "center"};
+}
+.dual-mcq{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  border-bottom:1px solid #000;
+  padding:7px 0;
+}
+.dual-eng{
+  direction:ltr;
+  text-align:left;
+  font-family:Times New Roman,serif;
+  font-size:15px;
+}
+.dual-urdu{
+  direction:rtl;
+  text-align:right;
+  font-family:'PaperUrdu','Jameel Noori Nastaleeq','Noto Nastaliq Urdu',serif;
+  font-size:20px;
+}
+.line-item{
+  margin:8px 0;
+  page-break-inside:avoid;
+}
+.footer{
+  text-align:center;
+  margin-top:20px;
+  font-size:${isRTL ? "22px" : "18px"};
+  font-weight:700;
+}
+@media print{
+  .paper{margin:0;border:3px double #000}
+}
+</style>
+</head>
+<body>
+<div class="paper">
+`;
 
-    const mcqs = count(data.mcqs);
-    const shorts = count(data.shortQuestions);
-    const longs = count(data.longQuestions);
-    const blanks = count(data.blanks);
-    const ticks = count(data.ticks);
-    const language = (data.language || "english").toLowerCase();
+  if (isRTL) {
+    html += `
+<div class="header">
+  <div class="school">${escapeHtml(data.academyName || "سکول / اکیڈمی")}</div>
+  <div class="subtitle">${isArabic ? "ورقة الامتحان" : "امتحانی پرچہ"}</div>
+</div>
 
-    function sectionBar(y, qNo, engTitle, marks, urduTitle) {
-      cell(left, y, 55, 26, qNo, { bold: true, size: 12, align: "center" });
+<table class="info">
+<tr>
+<td>کلاس: ${escapeHtml(data.className || "")}</td>
+<td>مضمون: ${escapeHtml(data.subjectName || "")}</td>
+<td>کل نمبر: ${escapeHtml(data.totalMarks || "")}</td>
+</tr>
+<tr>
+<td>وقت: __________</td>
+<td>نصاب: ${escapeHtml(data.syllabus || "")}</td>
+<td>ٹیسٹ: ${escapeHtml(data.testType || "")}</td>
+</tr>
+<tr>
+<td colspan="2">نام طالب علم: __________________________</td>
+<td>رول نمبر: __________</td>
+</tr>
+</table>
+`;
+  } else {
+    html += `
+<div class="header">
+  <div class="school">${escapeHtml((data.academyName || "SCHOOL / ACADEMY NAME").toUpperCase())}</div>
+  <div class="subtitle">Exam Paper</div>
+</div>
 
-      if (language === "both") {
-        cell(left + 55, y, 245, 26, engTitle, { bold: true, size: 12 });
-        cell(left + 300, y, 80, 26, marks, { bold: true, size: 12, align: "center" });
-        cell(left + 380, y, 145, 26, urduTitle, { urdu: true, size: 13, align: "right" });
-      } else if (language === "urdu" || language === "arabic") {
-        cell(left + 55, y, 390, 26, urduTitle, { urdu: true, size: 13, align: "right" });
-        cell(left + 445, y, 80, 26, marks, { bold: true, size: 12, align: "center" });
-      } else {
-        cell(left + 55, y, 390, 26, engTitle, { bold: true, size: 12 });
-        cell(left + 445, y, 80, 26, marks, { bold: true, size: 12, align: "center" });
-      }
+<table class="info">
+<tr>
+<td>Class: ${escapeHtml(data.className || "")}</td>
+<td>Subject: ${escapeHtml(data.subjectName || "")}</td>
+<td>Total Marks: ${escapeHtml(data.totalMarks || "")}</td>
+</tr>
+<tr>
+<td>Time: __________</td>
+<td>Syllabus: ${escapeHtml(data.syllabus || "")}</td>
+<td>Test: ${escapeHtml(data.testType || "")}</td>
+</tr>
+<tr>
+<td colspan="2">Student Name: __________________________</td>
+<td>Roll No: __________</td>
+</tr>
+</table>
+`;
+  }
 
-      doc.y = y + 30;
-    }
-
-    function urduSectionBar(y, qNo, title, marks) {
-      cell(left, y, 55, 28, qNo, { bold: true, size: 12, align: "center" });
-      cell(left + 55, y, 390, 28, title, { urdu: true, size: 14, align: "right" });
-      cell(left + 445, y, 80, 28, marks, { bold: true, size: 12, align: "center" });
-      doc.y = y + 34;
-    }
-
-    addBorder();
-
-    if (language === "urdu" || language === "arabic") {
-      useUrduFont(22);
-      doc.text((data.academyName || "سکول / اکیڈمی").toString(), left, 42, {
-        width,
-        align: "center"
-      });
-
-      useUrduFont(12);
-      doc.text(language === "arabic" ? "ورقة الامتحان" : "امتحانی پرچہ", left, 72, {
-        width,
-        align: "center"
-      });
-
-      const hy = 98;
-
-      cell(left, hy, 170, 32, "وقت: ________", { urdu: true, size: 12, align: "right" });
-      cell(left + 170, hy, 180, 32, "کلاس: " + (data.className || ""), { urdu: true, size: 12, align: "right" });
-      cell(left + 350, hy, 175, 32, "ٹیسٹ: " + (data.testType || ""), { urdu: true, size: 12, align: "right" });
-
-      cell(left, hy + 32, 170, 32, "تاریخ: ________", { urdu: true, size: 12, align: "right" });
-      cell(left + 170, hy + 32, 180, 32, "مضمون: " + (data.subjectName || ""), { urdu: true, size: 12, align: "right" });
-      cell(left + 350, hy + 32, 175, 32, "نصاب: " + (data.syllabus || ""), { urdu: true, size: 12, align: "right" });
-
-      cell(left, hy + 64, 250, 32, "رول نمبر: __________________", { urdu: true, size: 12, align: "right" });
-      cell(left + 250, hy + 64, 275, 32, "نام طالب علم: __________________", { urdu: true, size: 12, align: "right" });
-
-      let y = hy + 115;
-
-      if (mcqs > 0) {
-        useUrduFont(13);
-        doc.text(language === "arabic" ? "اختر الإجابة الصحيحة۔" : "درست جواب منتخب کریں۔", left, y, {
-          width,
-          align: "right"
-        });
-        y += 24;
-
-        urduSectionBar(y, "سوال 1", language === "arabic" ? "اختر الإجابة الصحيحة" : "درست جواب منتخب کریں", `1 x ${mcqs} = ${mcqs}`);
-        y = doc.y;
-
-        const rowH = 64;
-        const optH = 24;
-
-        for (let i = 0; i < mcqs; i++) {
-          checkPage(rowH + optH + 12);
-          y = doc.y;
-
-          const q = cleanLine(i);
-          const a = cleanLine(i + 1).slice(0, 24);
-          const b = cleanLine(i + 2).slice(0, 24);
-          const c = cleanLine(i + 3).slice(0, 24);
-          const d = cleanLine(i + 4).slice(0, 24);
-
-          cell(left, y, 40, rowH, `${i + 1}`, { bold: true, align: "center", size: 12 });
-          cell(left + 40, y, 485, rowH, q + "؟", { urdu: true, size: 14, align: "right" });
-
-          y += rowH;
-
-          cell(left, y, 25, optH, "A", { bold: true, align: "center", size: 10.5 });
-          cell(left + 25, y, 105, optH, a, { urdu: true, align: "right", size: 12 });
-
-          cell(left + 130, y, 25, optH, "B", { bold: true, align: "center", size: 10.5 });
-          cell(left + 155, y, 105, optH, b, { urdu: true, align: "right", size: 12 });
-
-          cell(left + 260, y, 25, optH, "C", { bold: true, align: "center", size: 10.5 });
-          cell(left + 285, y, 105, optH, c, { urdu: true, align: "right", size: 12 });
-
-          cell(left + 390, y, 25, optH, "D", { bold: true, align: "center", size: 10.5 });
-          cell(left + 415, y, 110, optH, d, { urdu: true, align: "right", size: 12 });
-
-          doc.y = y + optH;
-        }
-      }
-
-      if (blanks > 0) {
-        checkPage(50);
-        y = doc.y + 10;
-        urduSectionBar(y, "سوال 2", language === "arabic" ? "املأ الفراغات" : "خالی جگہ پُر کریں", `${blanks} Marks`);
-
-        for (let i = 0; i < blanks; i++) {
-          checkPage(42);
-          y = doc.y;
-
-          cell(left, y, 40, 36, `${i + 1}`, { bold: true, align: "center", size: 12 });
-          cell(left + 40, y, 485, 36, cleanLine(i + 10) + " ____________", {
-            urdu: true,
-            size: 13,
-            align: "right"
-          });
-
-          doc.y = y + 36;
-        }
-      }
-
-      if (ticks > 0) {
-        checkPage(50);
-        y = doc.y + 10;
-        urduSectionBar(y, "سوال 3", language === "arabic" ? "صحیح / غلط" : "درست / غلط", `${ticks} Marks`);
-
-        for (let i = 0; i < ticks; i++) {
-          checkPage(42);
-          y = doc.y;
-
-          cell(left, y, 40, 36, `${i + 1}`, { bold: true, align: "center", size: 12 });
-          cell(left + 40, y, 365, 36, cleanLine(i + 20) + "۔", {
-            urdu: true,
-            size: 13,
-            align: "right"
-          });
-          cell(left + 405, y, 120, 36, language === "arabic" ? "صحیح / غلط" : "درست / غلط", {
-            urdu: true,
-            size: 12,
-            align: "center"
-          });
-
-          doc.y = y + 36;
-        }
-      }
-
-      if (shorts > 0) {
-        checkPage(55);
-        y = doc.y + 12;
-        urduSectionBar(y, "سوال 4", language === "arabic" ? "أجب عن الأسئلة القصيرة" : "مختصر سوالات کے جواب دیں", `2 x ${shorts} = ${shorts * 2}`);
-
-        for (let i = 0; i < shorts; i++) {
-          checkPage(48);
-          y = doc.y;
-
-          cell(left, y, 40, 42, `${i + 1}`, { bold: true, align: "center", size: 12 });
-          cell(left + 40, y, 485, 42, cleanLine(i + 30) + "؟", {
-            urdu: true,
-            size: 13,
-            align: "right"
-          });
-
-          doc.y = y + 42;
-        }
-      }
-
-      if (longs > 0) {
-        checkPage(60);
-        y = doc.y + 12;
-        urduSectionBar(y, "سوال 5", language === "arabic" ? "أجب بالتفصيل" : "تفصیلی سوالات کے جواب دیں", `4 x ${longs} = ${longs * 4}`);
-
-        for (let i = 0; i < longs; i++) {
-          checkPage(60);
-          y = doc.y;
-
-          cell(left, y, 40, 55, `${i + 1}`, { bold: true, align: "center", size: 12 });
-          cell(left + 40, y, 485, 55, cleanLine(i + 45) + "۔", {
-            urdu: true,
-            size: 13,
-            align: "right"
-          });
-
-          doc.y = y + 55;
-        }
-      }
-
-      checkPage(40);
-      doc.moveDown(1);
-      useUrduFont(16);
-      doc.text(language === "arabic" ? "بالتوفيق" : "نیک تمنائیں", left, doc.y, {
-        width,
-        align: "center"
-      });
-
-      doc.end();
-
-      stream.on("finish", () => resolve({ pdfName, pdfPath }));
-      stream.on("error", reject);
-      return;
-    }
-
-    useEnglishFont(24, true);
-    doc.text((data.academyName || "SCHOOL / ACADEMY NAME").toUpperCase(), left, 42, {
-      width,
-      align: "center"
-    });
-
-    useEnglishFont(11);
-    doc.text("Exam Paper", left, 70, {
-      width,
-      align: "center"
-    });
-
-    const hy = 95;
-
-    cell(left, hy, 130, 32, "Test # " + (data.testType || ""), { bold: true, size: 11.5 });
-    cell(left + 130, hy, 180, 32, data.subjectName || "Subject", { bold: true, size: 12.5, align: "center" });
-    cell(left + 310, hy, 215, 32, "Chapter / Syllabus: " + (data.syllabus || ""), { bold: true, size: 11.5 });
-
-    cell(left, hy + 32, 130, 28, "Time: ________", { size: 11.5 });
-    cell(left + 130, hy + 32, 180, 28, "Class: " + (data.className || ""), { bold: true, size: 11.5, align: "center" });
-    cell(left + 310, hy + 32, 215, 28, "Date: ______ / ______ / ______", { size: 11.5 });
-
-    cell(left, hy + 60, 275, 28, "Student Name", { bold: true, size: 11.5 });
-    cell(left + 275, hy + 60, 125, 28, "Roll No", { bold: true, size: 11.5, align: "center" });
-    cell(left + 400, hy + 60, 125, 28, "Total Marks: " + (data.totalMarks || ""), { bold: true, size: 11.5 });
-
-    let y = hy + 100;
-
-    if (mcqs > 0) {
-      useEnglishFont(11.5, true);
-      doc.text("Four possible answers A, B, C and D are given. Tick the correct option.", left, y, { width });
-      y += 24;
-
-      sectionBar(y, "Q.1", "Choose the correct answer", `1 x ${mcqs} = ${mcqs}`, "درست جواب منتخب کریں");
-      y = doc.y;
-
-      const rowH = 48;
-      const optH = 20;
+  if (mcqs > 0) {
+    if (isBoth) {
+      html += `
+<div class="section-title">
+  <span>Q.1 Choose the correct answer</span>
+  <span>درست جواب منتخب کریں</span>
+  <span dir="ltr">1 x ${mcqs} = ${mcqs}</span>
+</div>
+<div class="question-box">`;
 
       for (let i = 0; i < mcqs; i++) {
-        checkPage(rowH + optH + 10);
-        y = doc.y;
-
-        const q = cleanLine(i);
-        const a = cleanLine(i + 1).slice(0, 22);
-        const b = cleanLine(i + 2).slice(0, 22);
-        const c = cleanLine(i + 3).slice(0, 22);
-        const d = cleanLine(i + 4).slice(0, 22);
-
-        cell(left, y, 25, rowH, `${i + 1})`, { bold: true, align: "center", size: 11 });
-
-        if (language === "both") {
-          cell(left + 25, y, 255, rowH, q + "?", { size: 11.5 });
-
-          cell(left + 280, y, 220, rowH, translateToUrdu(q), {
-            urdu: true,
-            size: 13,
-            align: "right"
-          });
-
-          cell(left + 500, y, 25, rowH, `(${i + 1})`, { bold: true, align: "center", size: 11 });
-        } else {
-          cell(left + 25, y, 500, rowH, q + "?", { size: 11.5 });
-        }
-
-        y += rowH;
-
-        cell(left, y, 25, optH, "A", { bold: true, align: "center", size: 10.5 });
-        cell(left + 25, y, 105, optH, a, { align: "center", size: 10.5 });
-
-        cell(left + 130, y, 25, optH, "B", { bold: true, align: "center", size: 10.5 });
-        cell(left + 155, y, 105, optH, b, { align: "center", size: 10.5 });
-
-        cell(left + 260, y, 25, optH, "C", { bold: true, align: "center", size: 10.5 });
-        cell(left + 285, y, 105, optH, c, { align: "center", size: 10.5 });
-
-        cell(left + 390, y, 25, optH, "D", { bold: true, align: "center", size: 10.5 });
-        cell(left + 415, y, 110, optH, d, { align: "center", size: 10.5 });
-
-        doc.y = y + optH;
+        html += `
+<div class="dual-mcq">
+  <div class="dual-eng">
+    <div><b>${i + 1}.</b> ${line(i)}?</div>
+    <div>A) ${line(i + 1).slice(0, 35)} &nbsp; B) ${line(i + 2).slice(0, 35)}</div>
+    <div>C) ${line(i + 3).slice(0, 35)} &nbsp; D) ${line(i + 4).slice(0, 35)}</div>
+  </div>
+  <div class="dual-urdu">
+    <div><b>${i + 1}۔</b> ${bothUrdu(i)}؟</div>
+  </div>
+</div>`;
       }
+
+      html += `</div>`;
+    } else if (isRTL) {
+      html += `
+<div class="section-title">
+  <span>${isArabic ? "السؤال 1: اختر الإجابة الصحيحة" : "سوال نمبر 1: درست جواب منتخب کریں"}</span>
+  <span dir="ltr">1 x ${mcqs} = ${mcqs}</span>
+</div>
+<div class="question-box">`;
+
+      for (let i = 0; i < mcqs; i++) {
+        html += `
+<div class="mcq-item">
+  <div class="q">${i + 1}۔ ${urduLine(i)}؟</div>
+  <div class="options">
+    <div class="option">الف) ${urduLine(i + 1).slice(0, 30)}</div>
+    <div class="option">ب) ${urduLine(i + 2).slice(0, 30)}</div>
+    <div class="option">ج) ${urduLine(i + 3).slice(0, 30)}</div>
+    <div class="option">د) ${urduLine(i + 4).slice(0, 30)}</div>
+  </div>
+</div>`;
+      }
+
+      html += `</div>`;
+    } else {
+      html += `
+<div class="section-title">
+  <span>Q.1 Choose the correct answer</span>
+  <span>1 x ${mcqs} = ${mcqs}</span>
+</div>
+<div class="question-box">`;
+
+      for (let i = 0; i < mcqs; i++) {
+        html += `
+<div class="mcq-item">
+  <div class="q">${i + 1}. ${line(i)}?</div>
+  <div class="options">
+    <div class="option">A) ${line(i + 1).slice(0, 30)}</div>
+    <div class="option">B) ${line(i + 2).slice(0, 30)}</div>
+    <div class="option">C) ${line(i + 3).slice(0, 30)}</div>
+    <div class="option">D) ${line(i + 4).slice(0, 30)}</div>
+  </div>
+</div>`;
+      }
+
+      html += `</div>`;
+    }
+  }
+
+  if (blanks > 0) {
+    html += `
+<div class="section-title">
+  <span>${isRTL ? (isArabic ? "السؤال 2: املأ الفراغات" : "سوال نمبر 2: خالی جگہ پُر کریں") : "Q.2 Fill in the blanks"}</span>
+  <span>${blanks} Marks</span>
+</div>
+<div class="question-box">`;
+
+    for (let i = 0; i < blanks; i++) {
+      html += `<div class="line-item">${isRTL ? `${i + 1}۔ ${urduLine(i + 10)} ____________` : `${i + 1}. ${line(i + 10)} ____________`}</div>`;
     }
 
-    if (blanks > 0) {
-      checkPage(50);
-      y = doc.y + 10;
-      sectionBar(y, "Q.2", "Fill in the blanks", `${blanks} Marks`, "خالی جگہ پر کریں");
+    html += `</div>`;
+  }
 
-      for (let i = 0; i < blanks; i++) {
-        checkPage(34);
-        y = doc.y;
+  if (ticks > 0) {
+    html += `
+<div class="section-title">
+  <span>${isRTL ? (isArabic ? "السؤال 3: صحيح / غلط" : "سوال نمبر 3: درست / غلط") : "Q.3 True / False"}</span>
+  <span>${ticks} Marks</span>
+</div>
+<div class="question-box">`;
 
-        cell(left, y, 35, 30, `${i + 1})`, { bold: true, align: "center", size: 11 });
-        cell(left + 35, y, 490, 30, cleanLine(i + 10).slice(0, 80) + " ____________", { size: 11.5 });
-
-        doc.y = y + 30;
-      }
+    for (let i = 0; i < ticks; i++) {
+      html += `<div class="line-item">${isRTL ? `${i + 1}۔ ${urduLine(i + 20)}۔ &nbsp;&nbsp; درست / غلط` : `${i + 1}. ${line(i + 20)}. True / False`}</div>`;
     }
 
-    if (ticks > 0) {
-      checkPage(50);
-      y = doc.y + 10;
-      sectionBar(y, "Q.3", "Tick correct statement", `${ticks} Marks`, "درست / غلط");
+    html += `</div>`;
+  }
 
-      for (let i = 0; i < ticks; i++) {
-        checkPage(34);
-        y = doc.y;
+  if (shorts > 0) {
+    html += `
+<div class="section-title">
+  <span>${isRTL ? (isArabic ? "السؤال 4: أجب عن الأسئلة القصيرة" : "سوال نمبر 4: مختصر سوالات کے جواب دیں") : "Q.4 Short answer questions"}</span>
+  <span>2 x ${shorts} = ${shorts * 2}</span>
+</div>
+<div class="question-box">`;
 
-        cell(left, y, 35, 30, `${i + 1})`, { bold: true, align: "center", size: 11 });
-        cell(left + 35, y, 370, 30, cleanLine(i + 20) + ".", { size: 11.5 });
-        cell(left + 405, y, 120, 30, "True / False", { bold: true, align: "center", size: 11.5 });
-
-        doc.y = y + 30;
-      }
+    for (let i = 0; i < shorts; i++) {
+      html += `<div class="line-item">${isRTL ? `${i + 1}۔ ${urduLine(i + 30)}؟` : `${romanNo(i + 1)}) ${line(i + 30)}?`}</div>`;
     }
 
-    if (shorts > 0) {
-      checkPage(55);
-      y = doc.y + 12;
-      sectionBar(y, "Q.4", "Short answer questions", `2 x ${shorts} = ${shorts * 2}`, "مختصر جوابات لکھیں");
+    html += `</div>`;
+  }
 
-      for (let i = 0; i < shorts; i++) {
-        checkPage(42);
-        y = doc.y;
+  if (longs > 0) {
+    html += `
+<div class="section-title">
+  <span>${isRTL ? (isArabic ? "السؤال 5: أجب بالتفصيل" : "سوال نمبر 5: تفصیلی سوالات کے جواب دیں") : "Q.5 Long answer questions"}</span>
+  <span>4 x ${longs} = ${longs * 4}</span>
+</div>
+<div class="question-box">`;
 
-        cell(left, y, 35, 38, `${romanNo(i + 1)})`, { bold: true, align: "center", size: 11 });
-        cell(left + 35, y, 490, 38, cleanLine(i + 30) + "?", { size: 11.5 });
-
-        doc.y = y + 38;
-      }
+    for (let i = 0; i < longs; i++) {
+      html += `<div class="line-item">${isRTL ? `${i + 1}۔ ${urduLine(i + 45)}۔` : `${String.fromCharCode(97 + i)}) Explain in detail: ${line(i + 45)}.`}</div>`;
     }
 
-    if (longs > 0) {
-      checkPage(55);
-      y = doc.y + 12;
-      sectionBar(y, "Q.5", "Long answer questions", `4 x ${longs} = ${longs * 4}`, "تفصیلی جوابات لکھیں");
+    html += `</div>`;
+  }
 
-      for (let i = 0; i < longs; i++) {
-        checkPage(60);
-        y = doc.y;
+  html += `
+<div class="footer">${isRTL ? (isArabic ? "بالتوفيق" : "نیک تمنائیں") : "Best of Luck"}</div>
+</div>
+</body>
+</html>`;
 
-        cell(left, y, 35, 55, `${String.fromCharCode(97 + i)})`, { bold: true, align: "center", size: 11 });
-        cell(left + 35, y, 490, 55, "Explain in detail: " + cleanLine(i + 45) + ".", { size: 11.5 });
+  return html;
+}
 
-        doc.y = y + 55;
-      }
-    }
+async function makePdf(data, sourceText) {
+  const pdfName = "papergenius-paper-" + Date.now() + ".pdf";
+  const pdfPath = path.join(paperDir, pdfName);
 
-    checkPage(40);
-    doc.moveDown(1);
-    useEnglishFont(14, true);
-    doc.text("Best of Luck", left, doc.y, { width, align: "center" });
+  const html = buildPaperHtml(data, sourceText);
 
-    doc.end();
-
-    stream.on("finish", () => resolve({ pdfName, pdfPath }));
-    stream.on("error", reject);
+  const browser = await puppeteer.launch({
+    headless: "new",
+    args: ["--no-sandbox", "--disable-setuid-sandbox"]
   });
+
+  const page = await browser.newPage();
+  await page.setContent(html, { waitUntil: "networkidle0" });
+
+  await page.pdf({
+    path: pdfPath,
+    format: "A4",
+    printBackground: true,
+    margin: {
+      top: "10mm",
+      right: "10mm",
+      bottom: "10mm",
+      left: "10mm"
+    }
+  });
+
+  await browser.close();
+
+  return { pdfName, pdfPath };
 }
 
 app.get("/", (req, res) => {
