@@ -54,10 +54,12 @@ function splitText(text) {
 function getLine(lines, i) {
   return lines[i % lines.length] || "Question from uploaded document";
 }
+
 function romanNo(num) {
   const arr = ["i","ii","iii","iv","v","vi","vii","viii","ix","x"];
   return arr[num - 1] || num;
 }
+
 function translateToUrdu(text) {
   return text
     .replaceAll("Physics Chapter 10 - Simple Harmonic Motion", "فزکس باب 10 - سادہ ارتعاشی حرکت")
@@ -74,6 +76,7 @@ function translateToUrdu(text) {
     .replaceAll("motion", "حرکت")
     .replaceAll("energy", "توانائی");
 }
+
 function makePdf(data, sourceText) {
   return new Promise((resolve, reject) => {
     const pdfName = "papergenius-paper-" + Date.now() + ".pdf";
@@ -84,9 +87,6 @@ function makePdf(data, sourceText) {
     doc.pipe(stream);
 
     const urduFontPath = path.join(__dirname, "Jameel Noori Nastaleeq.ttf");
-if (fs.existsSync(urduFontPath)) {
-  doc.registerFont("UrduFont", urduFontPath);
-}
     if (fs.existsSync(urduFontPath)) {
       doc.registerFont("UrduFont", urduFontPath);
     }
@@ -145,11 +145,28 @@ if (fs.existsSync(urduFontPath)) {
       });
     }
 
+    const mcqs = count(data.mcqs);
+    const shorts = count(data.shortQuestions);
+    const longs = count(data.longQuestions);
+    const blanks = count(data.blanks);
+    const ticks = count(data.ticks);
+    const language = (data.language || "english").toLowerCase();
+
     function sectionBar(y, qNo, engTitle, marks, urduTitle) {
       cell(left, y, 55, 26, qNo, { bold: true, size: 12, align: "center" });
-      cell(left + 55, y, 245, 26, engTitle, { bold: true, size: 12 });
-      cell(left + 300, y, 80, 26, marks, { bold: true, size: 12, align: "center" });
-      cell(left + 380, y, 145, 26, urduTitle, { urdu: true, size: 13, align: "right" });
+
+      if (language === "both") {
+        cell(left + 55, y, 245, 26, engTitle, { bold: true, size: 12 });
+        cell(left + 300, y, 80, 26, marks, { bold: true, size: 12, align: "center" });
+        cell(left + 380, y, 145, 26, urduTitle, { urdu: true, size: 13, align: "right" });
+      } else if (language === "urdu" || language === "arabic") {
+        cell(left + 55, y, 390, 26, urduTitle, { urdu: true, size: 13, align: "right" });
+        cell(left + 445, y, 80, 26, marks, { bold: true, size: 12, align: "center" });
+      } else {
+        cell(left + 55, y, 390, 26, engTitle, { bold: true, size: 12 });
+        cell(left + 445, y, 80, 26, marks, { bold: true, size: 12, align: "center" });
+      }
+
       doc.y = y + 30;
     }
 
@@ -181,17 +198,18 @@ if (fs.existsSync(urduFontPath)) {
     cell(left + 275, hy + 60, 125, 28, "Roll No", { bold: true, size: 11.5, align: "center" });
     cell(left + 400, hy + 60, 125, 28, "Total Marks: " + (data.totalMarks || ""), { bold: true, size: 11.5 });
 
-    const mcqs = count(data.mcqs);
-    const shorts = count(data.shortQuestions);
-    const longs = count(data.longQuestions);
-    const blanks = count(data.blanks);
-    const ticks = count(data.ticks);
-
     let y = hy + 100;
 
     if (mcqs > 0) {
       useEnglishFont(11.5, true);
-      doc.text("Four possible answers A, B, C and D are given. Tick the correct option.", left, y, { width });
+
+      if (language === "urdu" || language === "arabic") {
+        useUrduFont(13);
+        doc.text("درست جواب منتخب کریں۔", left, y, { width, align: "right" });
+      } else {
+        doc.text("Four possible answers A, B, C and D are given. Tick the correct option.", left, y, { width });
+      }
+
       y += 24;
 
       sectionBar(y, "Q.1", "Choose the correct answer", `1 x ${mcqs} = ${mcqs}`, "درست جواب منتخب کریں");
@@ -211,41 +229,58 @@ if (fs.existsSync(urduFontPath)) {
         const d = cleanLine(i + 4).slice(0, 22);
 
         cell(left, y, 25, rowH, `${i + 1})`, { bold: true, align: "center", size: 11 });
-        cell(left + 25, y, 255, rowH, q + "?", { size: 11.5 });
 
-        cell(left + 280, y, 220, rowH, translateToUrdu(q), {
-          urdu: true,
-          size: 13,
-          align: "right"
-        });
+        if (language === "both") {
+          cell(left + 25, y, 255, rowH, q + "?", { size: 11.5 });
 
-        cell(left + 500, y, 25, rowH, `(${i + 1})`, { bold: true, align: "center", size: 11 });
+          cell(left + 280, y, 220, rowH, translateToUrdu(q), {
+            urdu: true,
+            size: 13,
+            align: "right"
+          });
+
+          cell(left + 500, y, 25, rowH, `(${i + 1})`, { bold: true, align: "center", size: 11 });
+        } else if (language === "urdu" || language === "arabic") {
+          cell(left + 25, y, 500, rowH, translateToUrdu(q), {
+            urdu: true,
+            size: 13,
+            align: "right"
+          });
+        } else {
+          cell(left + 25, y, 500, rowH, q + "?", { size: 11.5 });
+        }
 
         y += rowH;
 
-        cell(left, y, 25, optH, "A", { bold: true, align: "center", size: 10.5 });
+        const optionUrdu = language === "urdu" || language === "arabic";
 
-        cell(left + 25, y, 105, optH, a, {
-  align: "center",
-  size: 10.5
-});
+        cell(left, y, 25, optH, "A", { bold: true, align: "center", size: 10.5 });
+        cell(left + 25, y, 105, optH, optionUrdu ? translateToUrdu(a) : a, {
+          align: "center",
+          size: 10.5,
+          urdu: optionUrdu
+        });
+
         cell(left + 130, y, 25, optH, "B", { bold: true, align: "center", size: 10.5 });
-cell(left + 155, y, 105, optH, b, {
-  align: "center",
-  size: 10.5
-});
+        cell(left + 155, y, 105, optH, optionUrdu ? translateToUrdu(b) : b, {
+          align: "center",
+          size: 10.5,
+          urdu: optionUrdu
+        });
 
         cell(left + 260, y, 25, optH, "C", { bold: true, align: "center", size: 10.5 });
-cell(left + 285, y, 105, optH, c, {
-  align: "center",
-  size: 10.5
-});
+        cell(left + 285, y, 105, optH, optionUrdu ? translateToUrdu(c) : c, {
+          align: "center",
+          size: 10.5,
+          urdu: optionUrdu
+        });
 
         cell(left + 390, y, 25, optH, "D", { bold: true, align: "center", size: 10.5 });
-cell(left + 415, y, 110, optH, d, {
-  align: "center",
-  size: 10.5
-});
+        cell(left + 415, y, 110, optH, optionUrdu ? translateToUrdu(d) : d, {
+          align: "center",
+          size: 10.5,
+          urdu: optionUrdu
+        });
 
         doc.y = y + optH;
       }
@@ -261,7 +296,16 @@ cell(left + 415, y, 110, optH, d, {
         y = doc.y;
 
         cell(left, y, 35, 30, `${i + 1})`, { bold: true, align: "center", size: 11 });
-        cell(left + 35, y, 490, 30, cleanLine(i + 10).slice(0, 80) + " ____________", { size: 11.5 });
+
+        if (language === "urdu" || language === "arabic") {
+          cell(left + 35, y, 490, 30, translateToUrdu(cleanLine(i + 10)) + " ____________", {
+            size: 13,
+            urdu: true,
+            align: "right"
+          });
+        } else {
+          cell(left + 35, y, 490, 30, cleanLine(i + 10).slice(0, 80) + " ____________", { size: 11.5 });
+        }
 
         doc.y = y + 30;
       }
@@ -277,8 +321,17 @@ cell(left + 415, y, 110, optH, d, {
         y = doc.y;
 
         cell(left, y, 35, 30, `${i + 1})`, { bold: true, align: "center", size: 11 });
-        cell(left + 35, y, 370, 30, cleanLine(i + 20) + ".", { size: 11.5 });
-        cell(left + 405, y, 120, 30, "True / False", { bold: true, align: "center", size: 11.5 });
+
+        if (language === "urdu" || language === "arabic") {
+          cell(left + 35, y, 490, 30, translateToUrdu(cleanLine(i + 20)) + "۔", {
+            size: 13,
+            urdu: true,
+            align: "right"
+          });
+        } else {
+          cell(left + 35, y, 370, 30, cleanLine(i + 20) + ".", { size: 11.5 });
+          cell(left + 405, y, 120, 30, "True / False", { bold: true, align: "center", size: 11.5 });
+        }
 
         doc.y = y + 30;
       }
@@ -294,12 +347,16 @@ cell(left + 415, y, 110, optH, d, {
         y = doc.y;
 
         cell(left, y, 35, 38, `${romanNo(i + 1)})`, { bold: true, align: "center", size: 11 });
-        cell(left + 35, y, 250, 38, cleanLine(i + 30) + "?", { size: 11.5 });
-        cell(left + 285, y, 240, 38, "اس سوال کا مختصر جواب لکھیں۔", {
-          urdu: true,
-          size: 13,
-          align: "right"
-        });
+
+        if (language === "urdu" || language === "arabic") {
+          cell(left + 35, y, 490, 38, translateToUrdu(cleanLine(i + 30)) + "؟", {
+            urdu: true,
+            size: 13,
+            align: "right"
+          });
+        } else {
+          cell(left + 35, y, 490, 38, cleanLine(i + 30) + "?", { size: 11.5 });
+        }
 
         doc.y = y + 38;
       }
@@ -315,12 +372,16 @@ cell(left + 415, y, 110, optH, d, {
         y = doc.y;
 
         cell(left, y, 35, 55, `${String.fromCharCode(97 + i)})`, { bold: true, align: "center", size: 11 });
-        cell(left + 35, y, 250, 55, "Explain in detail: " + cleanLine(i + 45) + ".", { size: 11.5 });
-        cell(left + 285, y, 240, 55, "درج ذیل سوال کا تفصیلی جواب لکھیں۔", {
-          urdu: true,
-          size: 13,
-          align: "right"
-        });
+
+        if (language === "urdu" || language === "arabic") {
+          cell(left + 35, y, 490, 55, translateToUrdu(cleanLine(i + 45)) + "۔", {
+            urdu: true,
+            size: 13,
+            align: "right"
+          });
+        } else {
+          cell(left + 35, y, 490, 55, "Explain in detail: " + cleanLine(i + 45) + ".", { size: 11.5 });
+        }
 
         doc.y = y + 55;
       }
@@ -337,6 +398,7 @@ cell(left + 415, y, 110, optH, d, {
     stream.on("error", reject);
   });
 }
+
 app.get("/", (req, res) => {
   res.send(`<!DOCTYPE html>
 <html lang="en">
@@ -469,7 +531,7 @@ a{text-decoration:none;color:inherit}
 <div class="field"><label>Total Marks</label><input type="number" name="totalMarks" required></div>
 <div class="field"><label>Test Type</label><input name="testType" placeholder="Type 7 - Short Test"></div>
 <div class="field"><label>Syllabus</label><input name="syllabus" placeholder="Unit-10"></div>
-<div class="field"><label>Language</label><select name="language"><option value="english">English</option><option value="urdu">Urdu</option><option value="arabic">Arabic</option><option value="both">English + Urdu</option></select></div>
+<div class="field"><label>Language</label><select name="language"><option value="english">English</option><option value="urdu">Urdu</option><option value="arabic">Arabic</option><option value="math">Math</option><option value="both">English + Urdu</option></select></div>
 <div class="field"><label>MCQs Count</label><input type="number" name="mcqs" value="7"></div>
 <div class="field"><label>Short Questions Count</label><input type="number" name="shortQuestions" value="7"></div>
 <div class="field"><label>Long Questions Count</label><input type="number" name="longQuestions" value="1"></div>
