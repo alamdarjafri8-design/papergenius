@@ -224,25 +224,25 @@ if (fs.existsSync(urduFontPath)) {
         y += rowH;
 
         cell(left, y, 25, optH, "A", { bold: true, align: "center", size: 10.5 });
-        cell(left + 25, y, 105, optH, translateToUrdu(a), {
+
+        cell(left + 25, y, 105, optH, a, {
   align: "center",
   size: 10.5
 });
-
         cell(left + 130, y, 25, optH, "B", { bold: true, align: "center", size: 10.5 });
-        cell(left + 155, y, 105, optH, translateToUrdu(b), {
+cell(left + 155, y, 105, optH, b, {
   align: "center",
   size: 10.5
 });
 
         cell(left + 260, y, 25, optH, "C", { bold: true, align: "center", size: 10.5 });
-        cell(left + 285, y, 105, optH, translateToUrdu(c), {
+cell(left + 285, y, 105, optH, c, {
   align: "center",
   size: 10.5
 });
 
         cell(left + 390, y, 25, optH, "D", { bold: true, align: "center", size: 10.5 });
-        cell(left + 415, y, 110, optH, translateToUrdu(d), {
+cell(left + 415, y, 110, optH, d, {
   align: "center",
   size: 10.5
 });
