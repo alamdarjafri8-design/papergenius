@@ -197,7 +197,7 @@ if (fs.existsSync(urduFontPath)) {
         cell(left, y, 25, rowH, `${i + 1})`, { bold: true, align: "center", size: 11 });
         cell(left + 25, y, 255, rowH, q + "?", { size: 11.5 });
 
-        cell(left + 280, y, 220, rowH, q + "؟", {
+        cell(left + 280, y, 220, rowH, "یہ سوال اردو میں یہاں آئے گا", {
           urdu: true,
           size: 13,
           align: "right"
