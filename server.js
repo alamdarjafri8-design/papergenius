@@ -67,7 +67,7 @@ function makePdf(data, sourceText) {
     const stream = fs.createWriteStream(pdfPath);
     doc.pipe(stream);
 
-    const urduFontPath = path.join(__dirname, "fonts", "JameelNooriNastaleeq.ttf");
+    const urduFontPath = path.join(__dirname, "Jameel Noori Nastaleeq.ttf");
 if (fs.existsSync(urduFontPath)) {
   doc.registerFont("UrduFont", urduFontPath);
 }
