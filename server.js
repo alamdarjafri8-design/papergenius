@@ -170,7 +170,187 @@ function makePdf(data, sourceText) {
       doc.y = y + 30;
     }
 
+    function urduSectionBar(y, qNo, title, marks) {
+      cell(left, y, 55, 28, qNo, { bold: true, size: 12, align: "center" });
+      cell(left + 55, y, 390, 28, title, { urdu: true, size: 14, align: "right" });
+      cell(left + 445, y, 80, 28, marks, { bold: true, size: 12, align: "center" });
+      doc.y = y + 34;
+    }
+
     addBorder();
+
+    if (language === "urdu" || language === "arabic") {
+      useUrduFont(22);
+      doc.text((data.academyName || "سکول / اکیڈمی").toString(), left, 42, {
+        width,
+        align: "center"
+      });
+
+      useUrduFont(12);
+      doc.text(language === "arabic" ? "ورقة الامتحان" : "امتحانی پرچہ", left, 72, {
+        width,
+        align: "center"
+      });
+
+      const hy = 98;
+
+      cell(left, hy, 170, 32, "وقت: ________", { urdu: true, size: 12, align: "right" });
+      cell(left + 170, hy, 180, 32, "کلاس: " + (data.className || ""), { urdu: true, size: 12, align: "right" });
+      cell(left + 350, hy, 175, 32, "ٹیسٹ: " + (data.testType || ""), { urdu: true, size: 12, align: "right" });
+
+      cell(left, hy + 32, 170, 32, "تاریخ: ________", { urdu: true, size: 12, align: "right" });
+      cell(left + 170, hy + 32, 180, 32, "مضمون: " + (data.subjectName || ""), { urdu: true, size: 12, align: "right" });
+      cell(left + 350, hy + 32, 175, 32, "نصاب: " + (data.syllabus || ""), { urdu: true, size: 12, align: "right" });
+
+      cell(left, hy + 64, 250, 32, "رول نمبر: __________________", { urdu: true, size: 12, align: "right" });
+      cell(left + 250, hy + 64, 275, 32, "نام طالب علم: __________________", { urdu: true, size: 12, align: "right" });
+
+      let y = hy + 115;
+
+      if (mcqs > 0) {
+        useUrduFont(13);
+        doc.text(language === "arabic" ? "اختر الإجابة الصحيحة۔" : "درست جواب منتخب کریں۔", left, y, {
+          width,
+          align: "right"
+        });
+        y += 24;
+
+        urduSectionBar(y, "سوال 1", language === "arabic" ? "اختر الإجابة الصحيحة" : "درست جواب منتخب کریں", `1 x ${mcqs} = ${mcqs}`);
+        y = doc.y;
+
+        const rowH = 64;
+        const optH = 24;
+
+        for (let i = 0; i < mcqs; i++) {
+          checkPage(rowH + optH + 12);
+          y = doc.y;
+
+          const q = cleanLine(i);
+          const a = cleanLine(i + 1).slice(0, 24);
+          const b = cleanLine(i + 2).slice(0, 24);
+          const c = cleanLine(i + 3).slice(0, 24);
+          const d = cleanLine(i + 4).slice(0, 24);
+
+          cell(left, y, 40, rowH, `${i + 1}`, { bold: true, align: "center", size: 12 });
+          cell(left + 40, y, 485, rowH, q + "؟", { urdu: true, size: 14, align: "right" });
+
+          y += rowH;
+
+          cell(left, y, 25, optH, "A", { bold: true, align: "center", size: 10.5 });
+          cell(left + 25, y, 105, optH, a, { urdu: true, align: "right", size: 12 });
+
+          cell(left + 130, y, 25, optH, "B", { bold: true, align: "center", size: 10.5 });
+          cell(left + 155, y, 105, optH, b, { urdu: true, align: "right", size: 12 });
+
+          cell(left + 260, y, 25, optH, "C", { bold: true, align: "center", size: 10.5 });
+          cell(left + 285, y, 105, optH, c, { urdu: true, align: "right", size: 12 });
+
+          cell(left + 390, y, 25, optH, "D", { bold: true, align: "center", size: 10.5 });
+          cell(left + 415, y, 110, optH, d, { urdu: true, align: "right", size: 12 });
+
+          doc.y = y + optH;
+        }
+      }
+
+      if (blanks > 0) {
+        checkPage(50);
+        y = doc.y + 10;
+        urduSectionBar(y, "سوال 2", language === "arabic" ? "املأ الفراغات" : "خالی جگہ پُر کریں", `${blanks} Marks`);
+
+        for (let i = 0; i < blanks; i++) {
+          checkPage(42);
+          y = doc.y;
+
+          cell(left, y, 40, 36, `${i + 1}`, { bold: true, align: "center", size: 12 });
+          cell(left + 40, y, 485, 36, cleanLine(i + 10) + " ____________", {
+            urdu: true,
+            size: 13,
+            align: "right"
+          });
+
+          doc.y = y + 36;
+        }
+      }
+
+      if (ticks > 0) {
+        checkPage(50);
+        y = doc.y + 10;
+        urduSectionBar(y, "سوال 3", language === "arabic" ? "صحیح / غلط" : "درست / غلط", `${ticks} Marks`);
+
+        for (let i = 0; i < ticks; i++) {
+          checkPage(42);
+          y = doc.y;
+
+          cell(left, y, 40, 36, `${i + 1}`, { bold: true, align: "center", size: 12 });
+          cell(left + 40, y, 365, 36, cleanLine(i + 20) + "۔", {
+            urdu: true,
+            size: 13,
+            align: "right"
+          });
+          cell(left + 405, y, 120, 36, language === "arabic" ? "صحیح / غلط" : "درست / غلط", {
+            urdu: true,
+            size: 12,
+            align: "center"
+          });
+
+          doc.y = y + 36;
+        }
+      }
+
+      if (shorts > 0) {
+        checkPage(55);
+        y = doc.y + 12;
+        urduSectionBar(y, "سوال 4", language === "arabic" ? "أجب عن الأسئلة القصيرة" : "مختصر سوالات کے جواب دیں", `2 x ${shorts} = ${shorts * 2}`);
+
+        for (let i = 0; i < shorts; i++) {
+          checkPage(48);
+          y = doc.y;
+
+          cell(left, y, 40, 42, `${i + 1}`, { bold: true, align: "center", size: 12 });
+          cell(left + 40, y, 485, 42, cleanLine(i + 30) + "؟", {
+            urdu: true,
+            size: 13,
+            align: "right"
+          });
+
+          doc.y = y + 42;
+        }
+      }
+
+      if (longs > 0) {
+        checkPage(60);
+        y = doc.y + 12;
+        urduSectionBar(y, "سوال 5", language === "arabic" ? "أجب بالتفصيل" : "تفصیلی سوالات کے جواب دیں", `4 x ${longs} = ${longs * 4}`);
+
+        for (let i = 0; i < longs; i++) {
+          checkPage(60);
+          y = doc.y;
+
+          cell(left, y, 40, 55, `${i + 1}`, { bold: true, align: "center", size: 12 });
+          cell(left + 40, y, 485, 55, cleanLine(i + 45) + "۔", {
+            urdu: true,
+            size: 13,
+            align: "right"
+          });
+
+          doc.y = y + 55;
+        }
+      }
+
+      checkPage(40);
+      doc.moveDown(1);
+      useUrduFont(16);
+      doc.text(language === "arabic" ? "بالتوفيق" : "نیک تمنائیں", left, doc.y, {
+        width,
+        align: "center"
+      });
+
+      doc.end();
+
+      stream.on("finish", () => resolve({ pdfName, pdfPath }));
+      stream.on("error", reject);
+      return;
+    }
 
     useEnglishFont(24, true);
     doc.text((data.academyName || "SCHOOL / ACADEMY NAME").toUpperCase(), left, 42, {
@@ -202,14 +382,7 @@ function makePdf(data, sourceText) {
 
     if (mcqs > 0) {
       useEnglishFont(11.5, true);
-
-      if (language === "urdu" || language === "arabic") {
-        useUrduFont(13);
-        doc.text("درست جواب منتخب کریں۔", left, y, { width, align: "right" });
-      } else {
-        doc.text("Four possible answers A, B, C and D are given. Tick the correct option.", left, y, { width });
-      }
-
+      doc.text("Four possible answers A, B, C and D are given. Tick the correct option.", left, y, { width });
       y += 24;
 
       sectionBar(y, "Q.1", "Choose the correct answer", `1 x ${mcqs} = ${mcqs}`, "درست جواب منتخب کریں");
@@ -240,47 +413,23 @@ function makePdf(data, sourceText) {
           });
 
           cell(left + 500, y, 25, rowH, `(${i + 1})`, { bold: true, align: "center", size: 11 });
-        } else if (language === "urdu" || language === "arabic") {
-          cell(left + 25, y, 500, rowH, translateToUrdu(q), {
-            urdu: true,
-            size: 13,
-            align: "right"
-          });
         } else {
           cell(left + 25, y, 500, rowH, q + "?", { size: 11.5 });
         }
 
         y += rowH;
 
-        const optionUrdu = language === "urdu" || language === "arabic";
-
         cell(left, y, 25, optH, "A", { bold: true, align: "center", size: 10.5 });
-        cell(left + 25, y, 105, optH, optionUrdu ? translateToUrdu(a) : a, {
-          align: "center",
-          size: 10.5,
-          urdu: optionUrdu
-        });
+        cell(left + 25, y, 105, optH, a, { align: "center", size: 10.5 });
 
         cell(left + 130, y, 25, optH, "B", { bold: true, align: "center", size: 10.5 });
-        cell(left + 155, y, 105, optH, optionUrdu ? translateToUrdu(b) : b, {
-          align: "center",
-          size: 10.5,
-          urdu: optionUrdu
-        });
+        cell(left + 155, y, 105, optH, b, { align: "center", size: 10.5 });
 
         cell(left + 260, y, 25, optH, "C", { bold: true, align: "center", size: 10.5 });
-        cell(left + 285, y, 105, optH, optionUrdu ? translateToUrdu(c) : c, {
-          align: "center",
-          size: 10.5,
-          urdu: optionUrdu
-        });
+        cell(left + 285, y, 105, optH, c, { align: "center", size: 10.5 });
 
         cell(left + 390, y, 25, optH, "D", { bold: true, align: "center", size: 10.5 });
-        cell(left + 415, y, 110, optH, optionUrdu ? translateToUrdu(d) : d, {
-          align: "center",
-          size: 10.5,
-          urdu: optionUrdu
-        });
+        cell(left + 415, y, 110, optH, d, { align: "center", size: 10.5 });
 
         doc.y = y + optH;
       }
@@ -296,16 +445,7 @@ function makePdf(data, sourceText) {
         y = doc.y;
 
         cell(left, y, 35, 30, `${i + 1})`, { bold: true, align: "center", size: 11 });
-
-        if (language === "urdu" || language === "arabic") {
-          cell(left + 35, y, 490, 30, translateToUrdu(cleanLine(i + 10)) + " ____________", {
-            size: 13,
-            urdu: true,
-            align: "right"
-          });
-        } else {
-          cell(left + 35, y, 490, 30, cleanLine(i + 10).slice(0, 80) + " ____________", { size: 11.5 });
-        }
+        cell(left + 35, y, 490, 30, cleanLine(i + 10).slice(0, 80) + " ____________", { size: 11.5 });
 
         doc.y = y + 30;
       }
@@ -321,17 +461,8 @@ function makePdf(data, sourceText) {
         y = doc.y;
 
         cell(left, y, 35, 30, `${i + 1})`, { bold: true, align: "center", size: 11 });
-
-        if (language === "urdu" || language === "arabic") {
-          cell(left + 35, y, 490, 30, translateToUrdu(cleanLine(i + 20)) + "۔", {
-            size: 13,
-            urdu: true,
-            align: "right"
-          });
-        } else {
-          cell(left + 35, y, 370, 30, cleanLine(i + 20) + ".", { size: 11.5 });
-          cell(left + 405, y, 120, 30, "True / False", { bold: true, align: "center", size: 11.5 });
-        }
+        cell(left + 35, y, 370, 30, cleanLine(i + 20) + ".", { size: 11.5 });
+        cell(left + 405, y, 120, 30, "True / False", { bold: true, align: "center", size: 11.5 });
 
         doc.y = y + 30;
       }
@@ -347,16 +478,7 @@ function makePdf(data, sourceText) {
         y = doc.y;
 
         cell(left, y, 35, 38, `${romanNo(i + 1)})`, { bold: true, align: "center", size: 11 });
-
-        if (language === "urdu" || language === "arabic") {
-          cell(left + 35, y, 490, 38, translateToUrdu(cleanLine(i + 30)) + "؟", {
-            urdu: true,
-            size: 13,
-            align: "right"
-          });
-        } else {
-          cell(left + 35, y, 490, 38, cleanLine(i + 30) + "?", { size: 11.5 });
-        }
+        cell(left + 35, y, 490, 38, cleanLine(i + 30) + "?", { size: 11.5 });
 
         doc.y = y + 38;
       }
@@ -372,16 +494,7 @@ function makePdf(data, sourceText) {
         y = doc.y;
 
         cell(left, y, 35, 55, `${String.fromCharCode(97 + i)})`, { bold: true, align: "center", size: 11 });
-
-        if (language === "urdu" || language === "arabic") {
-          cell(left + 35, y, 490, 55, translateToUrdu(cleanLine(i + 45)) + "۔", {
-            urdu: true,
-            size: 13,
-            align: "right"
-          });
-        } else {
-          cell(left + 35, y, 490, 55, "Explain in detail: " + cleanLine(i + 45) + ".", { size: 11.5 });
-        }
+        cell(left + 35, y, 490, 55, "Explain in detail: " + cleanLine(i + 45) + ".", { size: 11.5 });
 
         doc.y = y + 55;
       }
