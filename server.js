@@ -58,6 +58,22 @@ function romanNo(num) {
   const arr = ["i","ii","iii","iv","v","vi","vii","viii","ix","x"];
   return arr[num - 1] || num;
 }
+function translateToUrdu(text) {
+  return text
+    .replaceAll("Physics Chapter 10 - Simple Harmonic Motion", "فزکس باب 10 - سادہ ارتعاشی حرکت")
+    .replaceAll("Simple harmonic motion", "سادہ ارتعاشی حرکت")
+    .replaceAll("The SI unit of force is Newton", "قوت کی بین الاقوامی اکائی نیوٹن ہے")
+    .replaceAll("time period", "دوری وقت")
+    .replaceAll("simple pendulum", "سادہ پنڈولم")
+    .replaceAll("depends upon its length", "اپنی لمبائی پر منحصر ہوتا ہے")
+    .replaceAll("Wave motion transfers energy", "موجی حرکت توانائی منتقل کرتی ہے")
+    .replaceAll("frequency", "فریکوئنسی")
+    .replaceAll("Hertz", "ہرٹز")
+    .replaceAll("force", "قوت")
+    .replaceAll("wave", "موج")
+    .replaceAll("motion", "حرکت")
+    .replaceAll("energy", "توانائی");
+}
 function makePdf(data, sourceText) {
   return new Promise((resolve, reject) => {
     const pdfName = "papergenius-paper-" + Date.now() + ".pdf";
@@ -197,7 +213,7 @@ if (fs.existsSync(urduFontPath)) {
         cell(left, y, 25, rowH, `${i + 1})`, { bold: true, align: "center", size: 11 });
         cell(left + 25, y, 255, rowH, q + "?", { size: 11.5 });
 
-        cell(left + 280, y, 220, rowH, "یہ سوال اردو میں یہاں آئے گا", {
+        cell(left + 280, y, 220, rowH, translateToUrdu(q), {
           urdu: true,
           size: 13,
           align: "right"
